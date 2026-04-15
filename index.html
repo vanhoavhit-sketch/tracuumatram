@@ -40,13 +40,12 @@ input {
   margin-bottom: 10px;
 }
 
-/* BUTTON GROUP */
+/* BUTTON */
 .btn-group {
   display: flex;
   gap: 10px;
 }
 
-/* 🔽 nút tìm kiếm nhỏ hơn */
 .btn-search {
   flex: 0.7;
   padding: 12px;
@@ -108,7 +107,7 @@ input {
 
 /* PAGINATION */
 .pagination {
-  display: flex;
+  display: none;
   justify-content: center;
   gap: 10px;
   margin: 15px;
@@ -185,7 +184,7 @@ function render(arr) {
 
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
-    document.getElementById("pageInfo").innerText = "";
+    document.querySelector(".pagination").style.display = "none";
     return;
   }
 
@@ -220,6 +219,15 @@ function render(arr) {
 
 // pagination
 function updatePagination(total) {
+  const pagination = document.querySelector(".pagination");
+
+  if (total <= pageSize) {
+    pagination.style.display = "none";
+    return;
+  }
+
+  pagination.style.display = "flex";
+
   const totalPages = Math.ceil(total / pageSize);
 
   document.getElementById("pageInfo").innerText =
@@ -235,7 +243,7 @@ function doSearch(keyword) {
 
   if (!keyword) {
     document.getElementById("list").innerHTML = "";
-    document.getElementById("pageInfo").innerText = "";
+    document.querySelector(".pagination").style.display = "none";
     return;
   }
 
@@ -270,7 +278,7 @@ function handleSearch() {
 function clearSearch() {
   document.getElementById("searchInput").value = "";
   document.getElementById("list").innerHTML = "";
-  document.getElementById("pageInfo").innerText = "";
+  document.querySelector(".pagination").style.display = "none";
 }
 
 // pagination click
