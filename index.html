@@ -1,47 +1,51 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tra cứu trạm</title>
+<title>Tra cứu trạm Mobifone</title>
 
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: #f4f6f9;
+  font-family: "Segoe UI", Arial;
+  background: #f2f4f8;
 }
 
 /* HEADER */
 .header {
-  background: #005bac;
+  background: linear-gradient(90deg, #003366, #005bac);
   color: white;
+  padding: 15px;
   text-align: center;
-  padding: 12px;
   font-weight: bold;
 }
 
 /* SEARCH */
 .search-box {
-  background: white;
   padding: 15px;
+  background: white;
   display: flex;
   justify-content: center;
+  position: sticky;
+  top: 0;
 }
 
 .search-inner {
   width: 90%;
-  max-width: 380px;
+  max-width: 400px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
   border: 1px solid #ccc;
   margin-bottom: 8px;
 }
 
+/* BUTTON */
 .btn-group {
   display: flex;
   gap: 8px;
@@ -49,19 +53,26 @@ input {
 
 button {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   border: none;
-  font-size: 14px;
+  font-weight: bold;
 }
 
 .btn-search {
-  background: #005bac;
+  background: linear-gradient(135deg, #005bac, #007bff);
   color: white;
 }
 
 .btn-clear {
-  background: #eaeef3;
+  background: #f1f3f6;
+}
+
+/* LOADING */
+.loading {
+  text-align: center;
+  padding: 10px;
+  display: none;
 }
 
 /* STATS */
@@ -69,31 +80,28 @@ button {
   background: white;
   margin: 10px;
   padding: 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-/* RESULT BOX */
-.result-box {
-  background: white;
-  margin: 10px;
-  padding: 10px;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  font-size: 13px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* ITEM */
-.item {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  font-size: 13px;
+/* CARD */
+.card {
+  background: white;
+  margin: 10px;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  position: relative;
+  transition: 0.2s;
 }
 
-.item:last-child {
-  border-bottom: none;
+.card.active {
+  background: #d0e7ff;
+  border: 2px solid #005bac;
 }
+
+.row { margin-bottom: 6px; }
 
 .label {
   font-weight: bold;
@@ -106,10 +114,50 @@ button {
   font-weight: bold;
 }
 
-/* EMPTY */
+/* MAP BUTTON */
+.map-btn {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #005bac;
+  color: white;
+  border: none;
+}
+
+/* FAVORITE */
+.star {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+.star.active { color: gold; }
+
+/* PAGINATION */
+.pagination {
+  display: none;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #005bac;
+  color: white;
+}
+
+.page-btn:disabled {
+  background: #ccc;
+}
+
 .empty {
   text-align: center;
-  padding: 10px;
   color: #999;
 }
 </style>
@@ -117,27 +165,40 @@ button {
 
 <body>
 
-<div class="header">TRA CỨU TRẠM</div>
+<div class="header">MOBIFONE TRA CỨU TRẠM</div>
 
 <div class="search-box">
   <div class="search-inner">
     <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+
     <div class="btn-group">
-      <button class="btn-search" onclick="handleSearch()">Tìm</button>
+      <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
       <button class="btn-clear" onclick="clearSearch()">Xóa</button>
     </div>
   </div>
 </div>
 
+<div class="loading" id="loading">🔄 Đang tìm...</div>
+
+<!-- BOX THỐNG KÊ -->
 <div id="stats"></div>
 
-<div id="result"></div>
+<div id="list"></div>
+
+<div class="pagination">
+  <button class="page-btn" id="prevBtn">←</button>
+  <span id="pageInfo"></span>
+  <button class="page-btn" id="nextBtn">→</button>
+</div>
 
 <script>
 let data = [];
 let filtered = [];
+let currentPage = 1;
+const pageSize = 10;
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let activeId = null;
 
-// load data
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
@@ -157,10 +218,28 @@ function highlight(text, keyword) {
   return text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
+// favorite
+function toggleFav(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(i => i !== id);
+  } else {
+    favorites.push(id);
+  }
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  render(filtered);
+}
+
+// map
+function goMap(lat, long) {
+  window.open(`https://www.google.com/maps?q=${lat},${long}`);
+}
+
 // thống kê
 function renderStats(arr) {
+  const statsDiv = document.getElementById("stats");
+
   if (!arr.length) {
-    document.getElementById("stats").innerHTML = "";
+    statsDiv.innerHTML = "";
     return;
   }
 
@@ -178,66 +257,109 @@ function renderStats(arr) {
     <b>Thống kê theo địa chỉ:</b><br>`;
 
   Object.entries(byXa)
-    .sort((a,b) => b[1]-a[1])
+    .sort((a,b) => b[1] - a[1])
     .slice(0,5)
-    .forEach(([xa, count]) => {
+    .forEach(([xa,count]) => {
       html += `- ${xa}: ${count} trạm<br>`;
     });
 
   html += `</div>`;
 
-  document.getElementById("stats").innerHTML = html;
+  statsDiv.innerHTML = html;
 }
 
-// render kết quả
+// render
 function render(arr) {
-  const result = document.getElementById("result");
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
   if (!arr.length) {
-    result.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    document.querySelector(".pagination").style.display = "none";
     renderStats([]);
     return;
   }
 
+  const start = (currentPage - 1) * pageSize;
+  const pageData = arr.slice(start, start + pageSize);
   const keyword = normalize(searchInput.value);
 
-  // sort A-Z
-  arr.sort((a,b) => a.sitenamecu.localeCompare(b.sitenamecu));
+  pageData.forEach((item, index) => {
+    const id = item.sitenamecu + index;
+    const isFav = favorites.includes(id);
+    const isActive = activeId === id;
 
-  let html = `<div class="result-box">`;
+    const card = document.createElement("div");
+    card.className = "card " + (isActive ? "active" : "");
 
-  arr.forEach(item => {
-    html += `
-      <div class="item">
-        <div><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
-        <div><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
-        <div><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+    card.onclick = () => {
+      activeId = id;
+      render(filtered);
+    };
+
+    card.innerHTML = `
+      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+
+      <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
+      <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
+      <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
+      <div class="row">
+        <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
+        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
       </div>
+      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
     `;
+
+    list.appendChild(card);
   });
 
-  html += `</div>`;
-
-  result.innerHTML = html;
-
+  updatePagination(arr.length);
   renderStats(arr);
+}
+
+// pagination
+function updatePagination(total) {
+  const pagination = document.querySelector(".pagination");
+
+  if (total <= pageSize) {
+    pagination.style.display = "none";
+    return;
+  }
+
+  pagination.style.display = "flex";
+
+  const totalPages = Math.ceil(total / pageSize);
+  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
 }
 
 // search
 function doSearch(keyword) {
+  const loading = document.getElementById("loading");
+
   if (!keyword) {
-    result.innerHTML = "";
-    stats.innerHTML = "";
+    list.innerHTML = "";
+    document.getElementById("stats").innerHTML = "";
+    document.querySelector(".pagination").style.display = "none";
     return;
   }
 
-  filtered = data.filter(item =>
-    normalize(item.sitenamecu).includes(keyword) ||
-    normalize(item.sitenamemoi).includes(keyword) ||
-    normalize(item.diachi).includes(keyword)
-  );
+  loading.style.display = "block";
 
-  render(filtered);
+  setTimeout(() => {
+    filtered = data.filter(item =>
+      normalize(item.sitenamecu).includes(keyword) ||
+      normalize(item.sitenamemoi).includes(keyword) ||
+      normalize(item.diachi).includes(keyword)
+    );
+
+    currentPage = 1;
+    render(filtered);
+    loading.style.display = "none";
+  }, 300);
 }
 
 // events
@@ -251,9 +373,20 @@ function handleSearch() {
 
 function clearSearch() {
   searchInput.value = "";
-  result.innerHTML = "";
-  stats.innerHTML = "";
+  list.innerHTML = "";
+  document.getElementById("stats").innerHTML = "";
+  document.querySelector(".pagination").style.display = "none";
 }
+
+prevBtn.onclick = () => {
+  currentPage--;
+  render(filtered);
+};
+
+nextBtn.onclick = () => {
+  currentPage++;
+  render(filtered);
+};
 </script>
 
 </body>
