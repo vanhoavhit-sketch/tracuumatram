@@ -46,24 +46,27 @@ input {
   gap: 10px;
 }
 
-button {
-  flex: 1;
+/* 🔽 nút tìm kiếm nhỏ hơn */
+.btn-search {
+  flex: 0.7;
   padding: 12px;
   border-radius: 10px;
   border: none;
-  font-size: 15px;
+  background: #0066cc;
+  color: white;
   font-weight: bold;
   cursor: pointer;
 }
 
-.btn-search {
-  background: #0066cc;
-  color: white;
-}
-
 .btn-clear {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
   background: #e60023;
   color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 /* LOADING */
@@ -98,10 +101,31 @@ button {
   color: #003366;
 }
 
-/* highlight */
 .highlight {
   font-weight: bold;
   color: #e60023;
+}
+
+/* PAGINATION */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px;
+  align-items: center;
+}
+
+.page-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #0066cc;
+  color: white;
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  background: #ccc;
 }
 
 /* EMPTY */
@@ -118,7 +142,7 @@ button {
 <div class="header">MOBIFONE TRA CỨU TRẠM</div>
 
 <div class="search-box">
-  <input id="searchInput" placeholder="Site Name / địa chỉ...">
+  <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
 
   <div class="btn-group">
     <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
@@ -130,8 +154,17 @@ button {
 
 <div id="list"></div>
 
+<div class="pagination">
+  <button class="page-btn" id="prevBtn">← Trước</button>
+  <span id="pageInfo"></span>
+  <button class="page-btn" id="nextBtn">Sau →</button>
+</div>
+
 <script>
 let data = [];
+let filtered = [];
+let currentPage = 1;
+const pageSize = 10;
 
 fetch('dulieutram.json')
 .then(res => res.json())
@@ -152,10 +185,15 @@ function render(arr) {
 
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    document.getElementById("pageInfo").innerText = "";
     return;
   }
 
-  arr.forEach(item => {
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageData = arr.slice(start, end);
+
+  pageData.forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
 
@@ -176,27 +214,43 @@ function render(arr) {
 
     list.appendChild(card);
   });
+
+  updatePagination(arr.length);
 }
 
-// search logic
+// pagination
+function updatePagination(total) {
+  const totalPages = Math.ceil(total / pageSize);
+
+  document.getElementById("pageInfo").innerText =
+    `Trang ${currentPage} / ${totalPages}`;
+
+  document.getElementById("prevBtn").disabled = currentPage === 1;
+  document.getElementById("nextBtn").disabled = currentPage === totalPages;
+}
+
+// search
 function doSearch(keyword) {
   const loading = document.getElementById("loading");
 
   if (!keyword) {
     document.getElementById("list").innerHTML = "";
+    document.getElementById("pageInfo").innerText = "";
     return;
   }
 
   loading.style.display = "block";
 
   setTimeout(() => {
-    const result = data.filter(item =>
+    filtered = data.filter(item =>
       normalize(item.sitenamecu).includes(keyword) ||
       normalize(item.sitenamemoi).includes(keyword) ||
       normalize(item.diachi).includes(keyword)
     );
 
-    render(result);
+    currentPage = 1;
+    render(filtered);
+
     loading.style.display = "none";
   }, 300);
 }
@@ -216,7 +270,19 @@ function handleSearch() {
 function clearSearch() {
   document.getElementById("searchInput").value = "";
   document.getElementById("list").innerHTML = "";
+  document.getElementById("pageInfo").innerText = "";
 }
+
+// pagination click
+document.getElementById("prevBtn").onclick = () => {
+  currentPage--;
+  render(filtered);
+};
+
+document.getElementById("nextBtn").onclick = () => {
+  currentPage++;
+  render(filtered);
+};
 </script>
 
 </body>
