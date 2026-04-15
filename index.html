@@ -1,191 +1,91 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tra cứu trạm Mobifone</title>
+<title>Tra cứu trạm</title>
 <style>
-body {font-family: Arial, sans-serif; background:#eef3f7; padding:20px}
+body {font-family: Arial; background:#eef3f7; padding:20px}
 h1 {text-align:center; color:#0066cc}
-.search-box {display:flex; gap:10px; margin-bottom:10px}
+.search-box {display:flex; gap:10px}
 input {flex:1; padding:12px; font-size:16px; border-radius:8px; border:1px solid #ccc}
-button {padding:12px 16px; font-size:16px; border:none; border-radius:8px; background:#0066cc; color:white; cursor:pointer}
-button.secondary {background:#9e9e9e}
-button:hover {opacity:0.9}
-.card {background:white; padding:15px; margin-top:15px; border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.1)}
-.highlight {background:yellow; font-weight:bold}
-#loading {margin-top:10px; display:none; color:#0066cc; font-weight:bold}
-.spinner {display:inline-block; width:16px; height:16px; border:3px solid #ccc; border-top:3px solid #0066cc; border-radius:50%; animation:spin 1s linear infinite; margin-right:8px}
-@keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+button {padding:12px; border:none; border-radius:8px; background:#0066cc; color:white}
+.card {background:white; padding:15px; margin-top:15px; border-radius:12px}
+.highlight {background:yellow}
 </style>
 </head>
 <body>
 
-<h1>TRA CỨU TRẠM MOBIFONE</h1>
+<h1>TRA CỨU TRẠM</h1>
 
 <div class="search-box">
-  <input id="search" placeholder="Nhập Sitename... (không phân biệt hoa/thường, có thể gõ sai)">
-  <button onclick="searchData()">Tìm</button>
-  <button class="secondary" onclick="resetData()">Xóa</button>
+<input id="search" placeholder="Nhập sitename...">
+<button onclick="searchData()">Tìm</button>
+<button onclick="resetData()">Xóa</button>
 </div>
 
-<div id="loading"><span class="spinner"></span>Đang tải / tìm dữ liệu...</div>
+<div id="loading" style="display:none;">Đang tìm...</div>
 <div id="result"></div>
 
 <script>
 let data = [];
 
-// 🔥 Load đúng file JSON (cùng thư mục)
 fetch("datatram_clean.json")
-.then(res => {
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    return res.json();
-})
-.then(json => { 
-    data = json; 
-    console.log("Loaded:", data.length);
-})
-.catch(err => {
-    console.error("LỖI LOAD JSON:", err);
-    document.getElementById("result").innerHTML = "<b>Lỗi load dữ liệu JSON</b>";
-});
+.then(res => res.json())
+.then(json => data = json);
 
-// chuẩn hóa: bỏ dấu + lowercase
 function normalize(str){
-    return (str || "")
-        .toString()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
-}
-
-// Levenshtein (cho phép sai)
-function levenshtein(a, b){
-    const m = a.length, n = b.length;
-    const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
-    for(let i=0;i<=m;i++) dp[i][0]=i;
-    for(let j=0;j<=n;j++) dp[0][j]=j;
-    for(let i=1;i<=m;i++){
-        for(let j=1;j<=n;j++){
-            const cost = a[i-1]===b[j-1]?0:1;
-            dp[i][j] = Math.min(
-                dp[i-1][j]+1,
-                dp[i][j-1]+1,
-                dp[i-1][j-1]+cost
-            );
-        }
-    }
-    return dp[m][n];
-}
-
-function matchFuzzy(text, keyword){
-    const t = normalize(text);
-    if(t.includes(keyword)) return true;
-    if(keyword.length < 3) return false;
-    return levenshtein(t, keyword) <= 2;
+    return str.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
 }
 
 function highlight(text, keyword){
-    if(!keyword) return text;
-    let raw = text.toString();
-    let norm = normalize(raw);
-    let idx = norm.indexOf(keyword);
-    if(idx === -1) return raw;
-    return raw.substring(0, idx) +
-        '<span class="highlight">' + raw.substring(idx, idx + keyword.length) + '</span>' +
-        raw.substring(idx + keyword.length);
-}
-
-function renderFull(item, keyword){
-    let html = "<div class='card'>";
-    for (let key in item) {
-        let value = item[key] ? item[key].toString() : "";
-        html += `<div><b>${key}:</b> ${highlight(value, keyword)}</div>`;
-    }
-    html += "</div>";
-    return html;
+    let idx = normalize(text).indexOf(keyword);
+    if(idx === -1) return text;
+    return text.substring(0,idx) + "<span class='highlight'>" +
+           text.substring(idx, idx+keyword.length) +
+           "</span>" + text.substring(idx+keyword.length);
 }
 
 function searchData(){
-    let keywordRaw = document.getElementById("search").value;
-    let keyword = normalize(keywordRaw);
-    let resultDiv = document.getElementById("result");
+    let keyword = normalize(document.getElementById("search").value);
+    let result = document.getElementById("result");
     let loading = document.getElementById("loading");
 
-    resultDiv.innerHTML = "";
-
-    if(!data || data.length === 0){
-        resultDiv.innerHTML = "<b>Chưa load được dữ liệu JSON</b>";
-        return;
-    }
-
-    // 👉 nếu chưa nhập gì → show tất cả
-    if(keyword === ""){
-        data.slice(0, 50).forEach(item => {
-            resultDiv.innerHTML += renderFull(item, "");
-        });
-        return;
-    }
-
+    result.innerHTML = "";
     loading.style.display = "block";
 
-    setTimeout(() => {
-
+    setTimeout(()=>{
         let found = data.filter(item => {
-            let val = item["Sitename"];
-            if(!val) return false;
 
-            let normVal = normalize(val);
+    // 🔥 tự tìm key chứa "site"
+    let key = Object.keys(item).find(k =>
+        normalize(k).includes("sitename")
+    );
 
-            // ✅ match đơn giản trước (quan trọng)
-            if(normVal.includes(keyword)) return true;
+    if(!key) return false;
 
-            // ✅ fuzzy (gõ sai)
-            return levenshtein(normVal, keyword) <= 2;
-        });
-
-        loading.style.display = "none";
-
-        if(found.length === 0){
-            resultDiv.innerHTML = "<p><b>Không tìm thấy dữ liệu</b></p>";
-            return;
+    let val = item[key];
+    return val && matchFuzzy(val, keyword);
+});
         }
 
-        found.forEach(item => {
-            resultDiv.innerHTML += renderFull(item, keyword);
+        found.forEach(item=>{
+            let html = "<div class='card'>";
+            for(let k in item){
+                html += "<div><b>"+k+":</b> "+highlight(item[k].toString(), keyword)+"</div>";
+            }
+            html += "</div>";
+            result.innerHTML += html;
         });
-
-    }, 200);
-}    setTimeout(() => {
-        let found = data.filter(item => {
-            let val = item["Sitename"]; // 🔥 key chuẩn
-            return val && matchFuzzy(val, keyword);
-        });
-
-        loading.style.display = "none";
-
-        if(found.length === 0){
-            resultDiv.innerHTML = "<p><b>Không tìm thấy dữ liệu</b></p>";
-            return;
-        }
-
-        found.forEach(item => {
-            resultDiv.innerHTML += renderFull(item, keyword);
-        });
-    }, 200);
+    },300);
 }
 
 function resetData(){
     document.getElementById("search").value = "";
     document.getElementById("result").innerHTML = "";
 }
-
-// Enter hỗ trợ
-
-document.getElementById("search").addEventListener("keypress", function(e){
-    if(e.key === "Enter") searchData();
-});
 </script>
 
 </body>
