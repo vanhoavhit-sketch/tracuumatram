@@ -3,48 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tra cứu trạm Mobifone</title>
+<title>Tra cứu trạm</title>
 
 <style>
 body {
   margin: 0;
-  font-family: "Segoe UI", Arial;
-  background: #f2f4f8;
+  font-family: Arial;
+  background: #f4f6f9;
 }
 
 /* HEADER */
 .header {
-  background: linear-gradient(90deg, #003366, #005bac);
+  background: #005bac;
   color: white;
-  padding: 15px;
   text-align: center;
+  padding: 12px;
   font-weight: bold;
 }
 
 /* SEARCH */
 .search-box {
-  padding: 15px;
   background: white;
+  padding: 15px;
   display: flex;
   justify-content: center;
-  position: sticky;
-  top: 0;
 }
 
 .search-inner {
   width: 90%;
-  max-width: 400px;
+  max-width: 380px;
 }
 
 input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
   margin-bottom: 8px;
 }
 
-/* BUTTON */
 .btn-group {
   display: flex;
   gap: 8px;
@@ -52,51 +49,51 @@ input {
 
 button {
   flex: 1;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 8px;
   border: none;
-  font-weight: bold;
+  font-size: 14px;
 }
 
-/* MOBIFONE BUTTON */
 .btn-search {
-  background: linear-gradient(135deg, #005bac, #007bff);
+  background: #005bac;
   color: white;
-  box-shadow: 0 3px 6px rgba(0,91,172,0.3);
-}
-
-.btn-search:active {
-  transform: scale(0.96);
 }
 
 .btn-clear {
-  background: #f1f3f6;
+  background: #eaeef3;
 }
 
-/* LOADING */
-.loading {
-  text-align: center;
-  padding: 10px;
-  display: none;
-}
-
-/* CARD */
-.card {
+/* STATS */
+.stats-box {
   background: white;
   margin: 10px;
-  padding: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* RESULT BOX */
+.result-box {
+  background: white;
+  margin: 10px;
+  padding: 10px;
   border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  position: relative;
-  transition: 0.2s;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.card.active {
-  background: #d0e7ff;
-  border: 2px solid #005bac;
+/* ITEM */
+.item {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
 }
 
-.row { margin-bottom: 6px; }
+.item:last-child {
+  border-bottom: none;
+}
 
 .label {
   font-weight: bold;
@@ -109,50 +106,10 @@ button {
   font-weight: bold;
 }
 
-/* MAP BUTTON */
-.map-btn {
-  margin-left: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 6px;
-  background: #005bac;
-  color: white;
-  border: none;
-}
-
-/* FAVORITE */
-.star {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 20px;
-  cursor: pointer;
-  color: #ccc;
-}
-.star.active { color: gold; }
-
-/* PAGINATION */
-.pagination {
-  display: none;
-  justify-content: center;
-  gap: 10px;
-  margin: 15px;
-}
-
-.page-btn {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #005bac;
-  color: white;
-}
-
-.page-btn:disabled {
-  background: #ccc;
-}
-
+/* EMPTY */
 .empty {
   text-align: center;
+  padding: 10px;
   color: #999;
 }
 </style>
@@ -160,41 +117,32 @@ button {
 
 <body>
 
-<div class="header">MOBIFONE TRA CỨU TRẠM</div>
+<div class="header">TRA CỨU TRẠM</div>
 
 <div class="search-box">
   <div class="search-inner">
     <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
-
     <div class="btn-group">
-      <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
+      <button class="btn-search" onclick="handleSearch()">Tìm</button>
       <button class="btn-clear" onclick="clearSearch()">Xóa</button>
     </div>
   </div>
 </div>
 
-<div class="loading" id="loading">🔄 Đang tìm...</div>
+<div id="stats"></div>
 
-<div id="list"></div>
-
-<div class="pagination">
-  <button class="page-btn" id="prevBtn">←</button>
-  <span id="pageInfo"></span>
-  <button class="page-btn" id="nextBtn">→</button>
-</div>
+<div id="result"></div>
 
 <script>
 let data = [];
 let filtered = [];
-let currentPage = 1;
-const pageSize = 10;
-let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
-let activeId = null;
 
+// load data
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
 
+// normalize
 function normalize(str) {
   return (str || "")
     .normalize("NFD")
@@ -202,114 +150,97 @@ function normalize(str) {
     .toLowerCase();
 }
 
+// highlight
 function highlight(text, keyword) {
   if (!keyword) return text;
   const regex = new RegExp(`(${keyword})`, "gi");
   return text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
-function toggleFav(id) {
-  if (favorites.includes(id)) {
-    favorites = favorites.filter(i => i !== id);
-  } else {
-    favorites.push(id);
+// thống kê
+function renderStats(arr) {
+  if (!arr.length) {
+    document.getElementById("stats").innerHTML = "";
+    return;
   }
-  localStorage.setItem("fav", JSON.stringify(favorites));
+
+  const total = arr.length;
+  const byXa = {};
+
+  arr.forEach(item => {
+    const xa = item.diachi || "Không rõ";
+    if (!byXa[xa]) byXa[xa] = 0;
+    byXa[xa]++;
+  });
+
+  let html = `<div class="stats-box">
+    <b>Tổng số trạm:</b> ${total}<br><br>
+    <b>Thống kê theo địa chỉ:</b><br>`;
+
+  Object.entries(byXa)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,5)
+    .forEach(([xa, count]) => {
+      html += `- ${xa}: ${count} trạm<br>`;
+    });
+
+  html += `</div>`;
+
+  document.getElementById("stats").innerHTML = html;
+}
+
+// render kết quả
+function render(arr) {
+  const result = document.getElementById("result");
+
+  if (!arr.length) {
+    result.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    renderStats([]);
+    return;
+  }
+
+  const keyword = normalize(searchInput.value);
+
+  // sort A-Z
+  arr.sort((a,b) => a.sitenamecu.localeCompare(b.sitenamecu));
+
+  let html = `<div class="result-box">`;
+
+  arr.forEach(item => {
+    html += `
+      <div class="item">
+        <div><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
+        <div><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
+        <div><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  result.innerHTML = html;
+
+  renderStats(arr);
+}
+
+// search
+function doSearch(keyword) {
+  if (!keyword) {
+    result.innerHTML = "";
+    stats.innerHTML = "";
+    return;
+  }
+
+  filtered = data.filter(item =>
+    normalize(item.sitenamecu).includes(keyword) ||
+    normalize(item.sitenamemoi).includes(keyword) ||
+    normalize(item.diachi).includes(keyword)
+  );
+
   render(filtered);
 }
 
-function goMap(lat, long) {
-  window.open(`https://www.google.com/maps?q=${lat},${long}`);
-}
-
-function render(arr) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  if (!arr.length) {
-    list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
-    document.querySelector(".pagination").style.display = "none";
-    return;
-  }
-
-  const start = (currentPage - 1) * pageSize;
-  const pageData = arr.slice(start, start + pageSize);
-  const keyword = normalize(searchInput.value);
-
-  pageData.forEach((item, index) => {
-    const id = item.sitenamecu + index;
-    const isFav = favorites.includes(id);
-    const isActive = activeId === id;
-
-    const card = document.createElement("div");
-    card.className = "card " + (isActive ? "active" : "");
-
-    card.onclick = () => {
-      activeId = id;
-      render(filtered);
-    };
-
-    card.innerHTML = `
-      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
-
-      <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
-      <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
-      <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
-      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
-      <div class="row">
-        <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
-        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
-      </div>
-      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
-    `;
-
-    list.appendChild(card);
-  });
-
-  updatePagination(arr.length);
-}
-
-function updatePagination(total) {
-  const pagination = document.querySelector(".pagination");
-
-  if (total <= pageSize) {
-    pagination.style.display = "none";
-    return;
-  }
-
-  pagination.style.display = "flex";
-
-  const totalPages = Math.ceil(total / pageSize);
-  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
-
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
-}
-
-function doSearch(keyword) {
-  const loading = document.getElementById("loading");
-
-  if (!keyword) {
-    list.innerHTML = "";
-    document.querySelector(".pagination").style.display = "none";
-    return;
-  }
-
-  loading.style.display = "block";
-
-  setTimeout(() => {
-    filtered = data.filter(item =>
-      normalize(item.sitenamecu).includes(keyword) ||
-      normalize(item.sitenamemoi).includes(keyword) ||
-      normalize(item.diachi).includes(keyword)
-    );
-
-    currentPage = 1;
-    render(filtered);
-    loading.style.display = "none";
-  }, 300);
-}
-
+// events
 searchInput.addEventListener("input", e => {
   doSearch(normalize(e.target.value));
 });
@@ -320,19 +251,9 @@ function handleSearch() {
 
 function clearSearch() {
   searchInput.value = "";
-  list.innerHTML = "";
-  document.querySelector(".pagination").style.display = "none";
+  result.innerHTML = "";
+  stats.innerHTML = "";
 }
-
-prevBtn.onclick = () => {
-  currentPage--;
-  render(filtered);
-};
-
-nextBtn.onclick = () => {
-  currentPage++;
-  render(filtered);
-};
 </script>
 
 </body>
