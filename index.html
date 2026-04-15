@@ -29,7 +29,7 @@ button {padding:12px; border:none; border-radius:8px; background:#0066cc; color:
 <script>
 let data = [];
 
-fetch("datatram_clean.json")
+fetch("datatram.json")
 .then(res => res.json())
 .then(json => data = json);
 
@@ -57,7 +57,7 @@ function searchData(){
 
     setTimeout(()=>{
         let found = data.filter(item => {
-            let val = item["sitename_cu"];
+            let val = item["sitename"];
             return val && normalize(val).includes(keyword);
         });
 
