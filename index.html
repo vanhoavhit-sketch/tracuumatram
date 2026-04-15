@@ -68,6 +68,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  display: none; /* Ẩn ban đầu */
 }
 
 th, td {
@@ -97,7 +98,6 @@ tbody tr:hover {
     flex-direction: column;
   }
 }
-
 </style>
 </head>
 
@@ -133,16 +133,17 @@ tbody tr:hover {
 let data = [];
 let filtered = [];
 
+// Load JSON (KHÔNG render ban đầu)
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => {
   data = json;
-  render(data);
 });
 
 // remove dấu
 function normalize(str) {
-  return str.normalize("NFD")
+  return (str || "")
+    .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
@@ -150,6 +151,7 @@ function normalize(str) {
 // render table
 function render(arr) {
   const tbody = document.querySelector("tbody");
+
   tbody.innerHTML = "";
 
   arr.forEach(item => {
@@ -168,9 +170,7 @@ function render(arr) {
     // click mở map
     row.onclick = () => {
       if(item.Lat && item.Long){
-        window.open(
-          `https://www.google.com/maps?q=${item.Lat},${item.Long}`
-        );
+        window.open(`https://www.google.com/maps?q=${item.Lat},${item.Long}`);
       }
     };
 
@@ -180,11 +180,20 @@ function render(arr) {
   filtered = arr;
 }
 
-// realtime search
+// realtime search (CHỈ chạy khi có input)
 document.getElementById("searchInput").addEventListener("input", e => {
-  const keyword = normalize(e.target.value);
+  const keyword = normalize(e.target.value.trim());
 
-  document.getElementById("loading").style.display = "block";
+  const table = document.getElementById("table");
+  const loading = document.getElementById("loading");
+
+  // chưa nhập → ẩn hết
+  if (!keyword) {
+    table.style.display = "none";
+    return;
+  }
+
+  loading.style.display = "block";
 
   setTimeout(() => {
     const result = data.filter(item =>
@@ -194,12 +203,19 @@ document.getElementById("searchInput").addEventListener("input", e => {
     );
 
     render(result);
-    document.getElementById("loading").style.display = "none";
+
+    table.style.display = result.length ? "table" : "none";
+    loading.style.display = "none";
   }, 300);
 });
 
 // export excel
 function exportExcel() {
+  if (!filtered.length) {
+    alert("Không có dữ liệu để export!");
+    return;
+  }
+
   let csv = "sitenamecu,sitenamemoi,diachi,loaitram,Long,Lat,NVQL\n";
 
   filtered.forEach(i => {
