@@ -37,6 +37,33 @@ input {
   border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 16px;
+  margin-bottom: 10px;
+}
+
+/* BUTTON GROUP */
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-search {
+  background: #0066cc;
+  color: white;
+}
+
+.btn-clear {
+  background: #e60023;
+  color: white;
 }
 
 /* LOADING */
@@ -71,13 +98,18 @@ input {
   color: #003366;
 }
 
+/* highlight */
+.highlight {
+  font-weight: bold;
+  color: #e60023;
+}
+
 /* EMPTY */
 .empty {
   text-align: center;
   color: #999;
   margin-top: 20px;
 }
-
 </style>
 </head>
 
@@ -86,7 +118,12 @@ input {
 <div class="header">MOBIFONE TRA CỨU TRẠM</div>
 
 <div class="search-box">
-  <input id="searchInput" placeholder="Nhập sitename / địa chỉ... (VD: DLES01">
+  <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+
+  <div class="btn-group">
+    <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
+    <button class="btn-clear" onclick="clearSearch()">Xóa</button>
+  </div>
 </div>
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
@@ -108,7 +145,7 @@ function normalize(str) {
     .toLowerCase();
 }
 
-// render card
+// render
 function render(arr) {
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -123,8 +160,8 @@ function render(arr) {
     card.className = "card";
 
     card.innerHTML = `
-      <div class="row"><span class="label">Site cũ:</span> ${item.sitenamecu}</div>
-      <div class="row"><span class="label">Site mới:</span> ${item.sitenamemoi}</div>
+      <div class="row"><span class="label">Site cũ:</span> <span class="highlight">${item.sitenamecu}</span></div>
+      <div class="row"><span class="label">Site mới:</span> <span class="highlight">${item.sitenamemoi}</span></div>
       <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
       <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row"><span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}</div>
@@ -141,9 +178,8 @@ function render(arr) {
   });
 }
 
-// search realtime
-document.getElementById("searchInput").addEventListener("input", e => {
-  const keyword = normalize(e.target.value.trim());
+// search logic
+function doSearch(keyword) {
   const loading = document.getElementById("loading");
 
   if (!keyword) {
@@ -163,7 +199,24 @@ document.getElementById("searchInput").addEventListener("input", e => {
     render(result);
     loading.style.display = "none";
   }, 300);
+}
+
+// realtime
+document.getElementById("searchInput").addEventListener("input", e => {
+  doSearch(normalize(e.target.value.trim()));
 });
+
+// button search
+function handleSearch() {
+  const keyword = normalize(document.getElementById("searchInput").value.trim());
+  doSearch(keyword);
+}
+
+// clear
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("list").innerHTML = "";
+}
 </script>
 
 </body>
