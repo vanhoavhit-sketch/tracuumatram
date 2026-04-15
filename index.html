@@ -23,7 +23,7 @@ button:hover {opacity:0.9}
 <h1>TRA CỨU TRẠM MOBIFONE</h1>
 
 <div class="search-box">
-  <input id="search" placeholder="Nhập Sitename...">
+  <input id="search" placeholder="Nhập Sitename... (không phân biệt hoa/thường, có thể gõ sai)">
   <button onclick="searchData()">Tìm</button>
   <button class="secondary" onclick="resetData()">Xóa</button>
 </div>
@@ -41,6 +41,7 @@ fetch("datatram.json")
     console.log("Loaded:", data.length);
 });
 
+// chuẩn hóa: bỏ dấu + lowercase
 function normalize(str){
     return (str || "")
         .toString()
@@ -50,15 +51,31 @@ function normalize(str){
         .trim();
 }
 
+// tính khoảng cách Levenshtein (cho phép gõ sai)
+function levenshtein(a, b){
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
+    for(let i=0;i<=m;i++) dp[i][0]=i;
+    for(let j=0;j<=n;j++) dp[0][j]=j;
+    for(let i=1;i<=m;i++){
+        for(let j=1;j<=n;j++){
+            const cost = a[i-1]===b[j-1]?0:1;
+            dp[i][j] = Math.min(
+                dp[i-1][j]+1,
+                dp[i][j-1]+1,
+                dp[i-1][j-1]+cost
+            );
+        }
+    }
+    return dp[m][n];
+}
+
 function highlight(text, keyword){
     if(!keyword) return text;
-
     let raw = text.toString();
     let norm = normalize(raw);
     let idx = norm.indexOf(keyword);
-
     if(idx === -1) return raw;
-
     return raw.substring(0, idx) +
         '<span class="highlight">' + raw.substring(idx, idx + keyword.length) + '</span>' +
         raw.substring(idx + keyword.length);
@@ -74,6 +91,13 @@ function renderFull(item, keyword){
     return html;
 }
 
+function matchFuzzy(text, keyword){
+    const t = normalize(text);
+    if(t.includes(keyword)) return true; // chứa trực tiếp
+    if(keyword.length < 3) return false; // từ quá ngắn thì không fuzzy
+    return levenshtein(t, keyword) <= 2; // cho phép sai 1-2 ký tự
+}
+
 function searchData(){
     let keyword = normalize(document.getElementById("search").value);
     let resultDiv = document.getElementById("result");
@@ -84,8 +108,8 @@ function searchData(){
 
     setTimeout(() => {
         let found = data.filter(item => {
-            let val = item["Sitename"]; // ✅ key đúng
-            return val && normalize(val).includes(keyword);
+            let val = item["Sitename"]; // đúng key
+            return val && matchFuzzy(val, keyword);
         });
 
         loading.style.display = "none";
@@ -98,7 +122,7 @@ function searchData(){
         found.forEach(item => {
             resultDiv.innerHTML += renderFull(item, keyword);
         });
-    }, 300);
+    }, 200);
 }
 
 function resetData(){
@@ -106,12 +130,10 @@ function resetData(){
     document.getElementById("result").innerHTML = "";
 }
 
-// Enter vẫn dùng được
+// Enter
 
 document.getElementById("search").addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        searchData();
-    }
+    if(e.key === "Enter") searchData();
 });
 </script>
 
