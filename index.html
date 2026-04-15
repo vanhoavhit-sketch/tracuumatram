@@ -35,12 +35,17 @@ button:hover {opacity:0.9}
 let data = [];
 
 fetch("datatram_clean.json")
-.then(res => res.json())
+.then(res => {
+    console.log("Status:", res.status);
+    return res.json();
+})
 .then(json => { 
     data = json; 
-    console.log("Loaded:", data.length);
+    console.log("Loaded OK:", data.length);
+})
+.catch(err => {
+    console.error("LỖI LOAD JSON:", err);
 });
-
 // chuẩn hóa: bỏ dấu + lowercase
 function normalize(str){
     return (str || "")
