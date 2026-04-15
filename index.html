@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tra cứu trạm</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 16px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Tra cứu thông tin trạm</h2>
+
+<input type="text" id="searchInput" placeholder="Nhập sitenamecu...">
+<button onclick="search()">Tìm kiếm</button>
+
+<table id="resultTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>sitenamecu</th>
+      <th>sitenamemoi</th>
+      <th>địa chỉ</th>
+      <th>loại trạm</th>
+      <th>Long</th>
+      <th>Lat</th>
+      <th>NVQL</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+let data = [];
+
+// Load JSON
+fetch('dulieutram.json')
+  .then(response => response.json())
+  .then(json => data = json);
+
+// Search function
+function search() {
+  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+  const table = document.getElementById("resultTable");
+  const tbody = table.querySelector("tbody");
+
+  tbody.innerHTML = "";
+
+  const result = data.filter(item => 
+    item.sitenamecu.toLowerCase().includes(keyword)
+  );
+
+  if (result.length === 0) {
+    alert("Không tìm thấy!");
+    table.style.display = "none";
+    return;
+  }
+
+  result.forEach(item => {
+    const row = `
+      <tr>
+        <td>${item.sitenamecu}</td>
+        <td>${item.sitenamemoi}</td>
+        <td>${item.diachi}</td>
+        <td>${item.loaitram}</td>
+        <td>${item.Long}</td>
+        <td>${item.Lat}</td>
+        <td>${item.NVQL}</td>
+      </tr>
+    `;
+    tbody.innerHTML += row;
+  });
+
+  table.style.display = "table";
+}
+</script>
+
+</body>
+</html>

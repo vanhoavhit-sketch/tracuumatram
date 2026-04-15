@@ -1,0 +1,443 @@
+[
+  {
+    "sitenamecu": "DLES01",
+    "sitenamemoi": "DLKESP01",
+    "diachi": "Bưu Điện Ea Súp, TT Ea Súp, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.8843",
+    "Lat": "13.07054",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES02",
+    "sitenamemoi": "DLKERK01",
+    "diachi": "Thôn 9, xã Ea Roc, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.81472",
+    "Lat": "13.19722",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES03",
+    "sitenamemoi": "DLKERK02",
+    "diachi": "Thôn 3, xã Cư Kbang, huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.897483",
+    "Lat": "13.166348",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES04",
+    "sitenamemoi": "DLKESP02",
+    "diachi": "Thôn 3, xã Ea Le, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.86534",
+    "Lat": "13.106707",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES05",
+    "sitenamemoi": "DLKESP05",
+    "diachi": "Nhà ông Hà Văn Phúc, thôn 6, Xã CuMlan, H. Ea Súp, Đắk Lắk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.858342",
+    "Lat": "13.056092",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES06",
+    "sitenamemoi": "DLKESP03",
+    "diachi": "thôn 17, xã Ea Le, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.83098",
+    "Lat": "13.148307",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES07",
+    "sitenamemoi": "DLKERK03",
+    "diachi": "UBND Xã Ia Zlơi, thôn 6, xã Ia Zlơi, huyện EaSúp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.82744",
+    "Lat": "13.232553",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES08",
+    "sitenamemoi": "DLKIRE02",
+    "diachi": "Nhà ông Châu Đủ, Đội 6, thôn 12, Xã Iarve, H. Ea Súp, Đắk Lắk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.738297",
+    "Lat": "13.223733",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES09",
+    "sitenamemoi": "DLKILP03",
+    "diachi": "Trung đoàn 725, xã Iarve, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.70841",
+    "Lat": "13.345903",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES10",
+    "sitenamemoi": "DLKILP04",
+    "diachi": "Trung đoàn 736, xã Iarve, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.717668",
+    "Lat": "13.282508",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES11",
+    "sitenamemoi": "DLKIRE05",
+    "diachi": "Trung đoàn 737, xã Iarve, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.676698",
+    "Lat": "13.268475",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES12",
+    "sitenamemoi": "DLKIRE01",
+    "diachi": "Trung đoàn 739, xã Iarve, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.629025",
+    "Lat": "13.218682",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES13",
+    "sitenamemoi": "DLKEBG01",
+    "diachi": "Thôn 13, xã Ya Tmot, H. Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -CRAN",
+    "Long": "107.814275",
+    "Lat": "13.123345",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES15",
+    "sitenamemoi": "DLKESP06",
+    "diachi": "thôn 7, xã Cư M'lan, huyện Ea Súp",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.89091",
+    "Lat": "13.04189",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES16",
+    "sitenamemoi": "DLKILP02",
+    "diachi": "Thôn Chiềng, xã Ia Lốp, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.65759",
+    "Lat": "13.32721",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES17",
+    "sitenamemoi": "DLKIRE03",
+    "diachi": "Thôn 5, xã Ia Rvê, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.62918",
+    "Lat": "13.17788",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES18",
+    "sitenamemoi": "DLKESP07",
+    "diachi": "Thôn 13, xã Ea Le, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.884",
+    "Lat": "13.0923",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES19",
+    "sitenamemoi": "DLKESP08",
+    "diachi": "Trạm Viettel DLK0230 xã Cư Mlan, huyện Ea Súp, tỉnh Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.82633",
+    "Lat": "13.00167",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES20",
+    "sitenamemoi": "DLKEBG02",
+    "diachi": "Thôn 7 , xã Ya tờ Mốt, H. Ea Súp, Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.82613",
+    "Lat": "13.10718",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES21",
+    "sitenamemoi": "DLKESP09",
+    "diachi": "Thôn 1 , xã Cư M'lan, huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.87392",
+    "Lat": "13.05788",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES22",
+    "sitenamemoi": "DLKESP10",
+    "diachi": "Thôn 9, xã Ea Lê, huện Ea Súp,  tỉnh Đăk Lăk",
+    "loaitram": "UT3 -CRAN",
+    "Long": "107.84445",
+    "Lat": "13.12957",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES23",
+    "sitenamemoi": "DLKERK04",
+    "diachi": "Thôn 11, xã Ea Rôk, huyện Ea Súp, thỉnh Đăk Lăk",
+    "loaitram": "UT2 -CRAN",
+    "Long": "107.82011",
+    "Lat": "13.17041",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES24",
+    "sitenamemoi": "DLKESP11",
+    "diachi": "Thôn 14, xã Ea Lê, huyện Ea Súp, Tỉnh Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.89156",
+    "Lat": "13.0781",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES25",
+    "sitenamemoi": "DLKESP12",
+    "diachi": "Thôn 15, xã Ea Lê, huyện Ea Súp, Tỉnh Đăk Lăk",
+    "loaitram": "UT3 -Macro",
+    "Long": "107.86835",
+    "Lat": "13.1308",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES26",
+    "sitenamemoi": "DLKERK05",
+    "diachi": "Thôn 16, xã Cư K'Bang, huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.89686",
+    "Lat": "13.2025",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES27",
+    "sitenamemoi": "DLKEBG03",
+    "diachi": "Thôn 10, xã Ea Bung, huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT3 -CRAN",
+    "Long": "107.85134",
+    "Lat": "13.09251",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES28",
+    "sitenamemoi": "DLKESP13",
+    "diachi": "Thôn 10, thị trấn Ea Súp, huyện Ea Sup, tỉnh Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.874479",
+    "Lat": "13.08332",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES29",
+    "sitenamemoi": "DLKESP14",
+    "diachi": "Thôn 7, thị trấn Ea Súp, huyện Ea Sup, tỉnh Đăk Lăk",
+    "loaitram": "UT2 -CRAN",
+    "Long": "107.88734",
+    "Lat": "13.05764",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES30",
+    "sitenamemoi": "DLKERK06",
+    "diachi": "Thôn 20 xã Ea Rốc, huyên Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "107.58742",
+    "Lat": "13.23443",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES31",
+    "sitenamemoi": "DLKIRE04",
+    "diachi": "Trạm Viettel DLK0295, xã Iarve, huyện Ea Súp, Đắk Lắk",
+    "loaitram": "UT3 -Macro",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES50",
+    "sitenamemoi": "DLKILP01",
+    "diachi": "Thôn Đoàn, xã Ialop, Huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT3 -Macro",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES51",
+    "sitenamemoi": "DLKERK07",
+    "diachi": "Thôn 7, xã Cư Kbang, Huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT2 -Macro",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "DLES52",
+    "sitenamemoi": "DLKIRE06",
+    "diachi": "Thôn 11, xã Iarver, huyện Ea Súp, tỉnh Đăk Lăk",
+    "loaitram": "UT3 -Macro",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES32",
+    "sitenamemoi": "DLKESP6A",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES33",
+    "sitenamemoi": "DLKIRE6A",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES34",
+    "sitenamemoi": "DLKILP6A",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES35",
+    "sitenamemoi": "DLKILP6B",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES36",
+    "sitenamemoi": "DLKILP6C",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES37",
+    "sitenamemoi": "DLKERK6A",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES38",
+    "sitenamemoi": "DLKERK6B",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES39",
+    "sitenamemoi": "DLKERK6C",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES40",
+    "sitenamemoi": "DLKIRE6B",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES41",
+    "sitenamemoi": "DLKEBG6A",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES42",
+    "sitenamemoi": "DLKEBG6B",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES53",
+    "sitenamemoi": "DLKIRE6C",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES54",
+    "sitenamemoi": "DLKESP6B",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES55",
+    "sitenamemoi": "DLKIRE6D",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES61",
+    "sitenamemoi": "DLKERK6D",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  },
+  {
+    "sitenamecu": "MBF_DLES65",
+    "sitenamemoi": "DLKIRE6E",
+    "diachi": "",
+    "loaitram": "UT3 -MORAN VNPT Host",
+    "Long": "",
+    "Lat": "",
+    "NVQL": "Nguyễn Văn Hòa"
+  }
+]
