@@ -21,6 +21,26 @@
 <div class="box" id="result"></div>
 
 <script>
+let data = [];
+
+fetch("data.json")
+.then(res => res.json())
+.then(json => data = json);
+
+function normalize(str){
+    return str.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+}
+
+function highlight(text, keyword){
+    let idx = normalize(text).indexOf(keyword);
+    if(idx === -1) return text;
+    return text.substring(0,idx) + "<span class='highlight'>" +
+           text.substring(idx, idx+keyword.length) +
+           "</span>" + text.substring(idx+keyword.length);
+}
+  
 function searchData(){
     let keyword = normalize(document.getElementById("search").value);
     let result = document.getElementById("result");
