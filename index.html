@@ -58,17 +58,15 @@ function searchData(){
 
     setTimeout(()=>{
         let found = data.filter(item => {
+            let val = item["sitename_cu"];
+            return val && normalize(val).includes(keyword);
+        });
 
-    // 🔥 tự tìm key chứa "site"
-    let key = Object.keys(item).find(k =>
-        normalize(k).includes("sitename")
-    );
+        loading.style.display = "none";
 
-    if(!key) return false;
-
-    let val = item[key];
-    return val && matchFuzzy(val, keyword);
-});
+        if(found.length === 0){
+            result.innerHTML = "Không tìm thấy";
+            return;
         }
 
         found.forEach(item=>{
