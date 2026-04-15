@@ -19,7 +19,6 @@ body {
   padding: 15px;
   text-align: center;
   font-weight: bold;
-  font-size: 18px;
 }
 
 /* SEARCH */
@@ -29,43 +28,45 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+
+.search-inner {
+  width: 90%;
+  max-width: 400px;
 }
 
 input {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   border-radius: 10px;
   border: 1px solid #ccc;
-  font-size: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-/* BUTTON */
 .btn-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+}
+
+button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
 }
 
 .btn-search {
-  flex: 0.7;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
+  flex: 0.6;
   background: #0066cc;
   color: white;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 .btn-clear {
   flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
   background: #e60023;
   color: white;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 /* LOADING */
@@ -73,7 +74,6 @@ input {
   text-align: center;
   padding: 10px;
   display: none;
-  color: #0066cc;
 }
 
 /* CARD */
@@ -83,16 +83,17 @@ input {
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
 }
 
-.card:hover {
-  background: #f0f8ff;
+.card.active {
+  background: #d0e7ff;
+  border: 2px solid #0066cc;
 }
 
 .row {
   margin-bottom: 6px;
-  font-size: 14px;
 }
 
 .label {
@@ -101,8 +102,33 @@ input {
 }
 
 .highlight {
+  background: yellow;
   font-weight: bold;
-  color: #e60023;
+}
+
+/* BUTTON MAP */
+.map-btn {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #0066cc;
+  color: white;
+  border: none;
+}
+
+/* FAVORITE */
+.star {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.star.active {
+  color: gold;
 }
 
 /* PAGINATION */
@@ -111,27 +137,23 @@ input {
   justify-content: center;
   gap: 10px;
   margin: 15px;
-  align-items: center;
 }
 
 .page-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
   border: none;
   background: #0066cc;
   color: white;
-  cursor: pointer;
 }
 
 .page-btn:disabled {
   background: #ccc;
 }
 
-/* EMPTY */
 .empty {
   text-align: center;
   color: #999;
-  margin-top: 20px;
 }
 </style>
 </head>
@@ -141,11 +163,13 @@ input {
 <div class="header">MOBIFONE TRA CỨU TRẠM</div>
 
 <div class="search-box">
-  <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+  <div class="search-inner">
+    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
 
-  <div class="btn-group">
-    <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
-    <button class="btn-clear" onclick="clearSearch()">Xóa</button>
+    <div class="btn-group">
+      <button class="btn-search" onclick="handleSearch()">Tìm</button>
+      <button class="btn-clear" onclick="clearSearch()">Xóa</button>
+    </div>
   </div>
 </div>
 
@@ -154,9 +178,9 @@ input {
 <div id="list"></div>
 
 <div class="pagination">
-  <button class="page-btn" id="prevBtn">← Trước</button>
+  <button class="page-btn" id="prevBtn">←</button>
   <span id="pageInfo"></span>
-  <button class="page-btn" id="nextBtn">Sau →</button>
+  <button class="page-btn" id="nextBtn">→</button>
 </div>
 
 <script>
@@ -164,6 +188,8 @@ let data = [];
 let filtered = [];
 let currentPage = 1;
 const pageSize = 10;
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let activeId = null;
 
 fetch('dulieutram.json')
 .then(res => res.json())
@@ -175,6 +201,29 @@ function normalize(str) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+// highlight
+function highlight(text, keyword) {
+  if (!keyword) return text;
+  const regex = new RegExp(`(${keyword})`, "gi");
+  return text.replace(regex, `<span class="highlight">$1</span>`);
+}
+
+// favorite
+function toggleFav(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(i => i !== id);
+  } else {
+    favorites.push(id);
+  }
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  render(filtered);
+}
+
+// map
+function goMap(lat, long) {
+  window.open(`https://www.google.com/maps?q=${lat},${long}`);
 }
 
 // render
@@ -189,27 +238,35 @@ function render(arr) {
   }
 
   const start = (currentPage - 1) * pageSize;
-  const end = start + pageSize;
-  const pageData = arr.slice(start, end);
+  const pageData = arr.slice(start, start + pageSize);
+  const keyword = normalize(searchInput.value);
 
-  pageData.forEach(item => {
+  pageData.forEach((item, index) => {
+    const id = item.sitenamecu + index;
+    const isFav = favorites.includes(id);
+    const isActive = activeId === id;
+
     const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <div class="row"><span class="label">Site cũ:</span> <span class="highlight">${item.sitenamecu}</span></div>
-      <div class="row"><span class="label">Site mới:</span> <span class="highlight">${item.sitenamemoi}</span></div>
-      <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
-      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
-      <div class="row"><span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}</div>
-      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
-    `;
+    card.className = "card " + (isActive ? "active" : "");
 
     card.onclick = () => {
-      if(item.Lat && item.Long){
-        window.open(`https://www.google.com/maps?q=${item.Lat},${item.Long}`);
-      }
+      activeId = id;
+      render(filtered);
     };
+
+    card.innerHTML = `
+      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+
+      <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
+      <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
+      <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
+      <div class="row">
+        <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
+        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
+      </div>
+      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
+    `;
 
     list.appendChild(card);
   });
@@ -229,12 +286,10 @@ function updatePagination(total) {
   pagination.style.display = "flex";
 
   const totalPages = Math.ceil(total / pageSize);
+  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
 
-  document.getElementById("pageInfo").innerText =
-    `Trang ${currentPage} / ${totalPages}`;
-
-  document.getElementById("prevBtn").disabled = currentPage === 1;
-  document.getElementById("nextBtn").disabled = currentPage === totalPages;
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
 }
 
 // search
@@ -242,7 +297,7 @@ function doSearch(keyword) {
   const loading = document.getElementById("loading");
 
   if (!keyword) {
-    document.getElementById("list").innerHTML = "";
+    list.innerHTML = "";
     document.querySelector(".pagination").style.display = "none";
     return;
   }
@@ -258,36 +313,31 @@ function doSearch(keyword) {
 
     currentPage = 1;
     render(filtered);
-
     loading.style.display = "none";
   }, 300);
 }
 
-// realtime
-document.getElementById("searchInput").addEventListener("input", e => {
-  doSearch(normalize(e.target.value.trim()));
+// events
+searchInput.addEventListener("input", e => {
+  doSearch(normalize(e.target.value));
 });
 
-// button search
 function handleSearch() {
-  const keyword = normalize(document.getElementById("searchInput").value.trim());
-  doSearch(keyword);
+  doSearch(normalize(searchInput.value));
 }
 
-// clear
 function clearSearch() {
-  document.getElementById("searchInput").value = "";
-  document.getElementById("list").innerHTML = "";
+  searchInput.value = "";
+  list.innerHTML = "";
   document.querySelector(".pagination").style.display = "none";
 }
 
-// pagination click
-document.getElementById("prevBtn").onclick = () => {
+prevBtn.onclick = () => {
   currentPage--;
   render(filtered);
 };
 
-document.getElementById("nextBtn").onclick = () => {
+nextBtn.onclick = () => {
   currentPage++;
   render(filtered);
 };
