@@ -23,7 +23,7 @@
 <script>
 let data = [];
 
-fetch("data.json")
+fetch("datatram.json")
 .then(res => res.json())
 .then(json => data = json);
 
@@ -50,7 +50,7 @@ function searchData(){
     loading.style.display = "block";
 
     setTimeout(()=>{
-        let found = data.filter(item => {
+        let found = datatram.filter(item => {
             let val = item["sitename"];
             return val && normalize(val).includes(keyword);
         });
