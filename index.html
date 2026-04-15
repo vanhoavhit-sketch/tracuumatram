@@ -108,19 +108,56 @@ function renderFull(item, keyword){
 }
 
 function searchData(){
-    let keyword = normalize(document.getElementById("search").value);
+    let keywordRaw = document.getElementById("search").value;
+    let keyword = normalize(keywordRaw);
     let resultDiv = document.getElementById("result");
     let loading = document.getElementById("loading");
+
+    resultDiv.innerHTML = "";
 
     if(!data || data.length === 0){
         resultDiv.innerHTML = "<b>Chưa load được dữ liệu JSON</b>";
         return;
     }
 
-    resultDiv.innerHTML = "";
+    // 👉 nếu chưa nhập gì → show tất cả
+    if(keyword === ""){
+        data.slice(0, 50).forEach(item => {
+            resultDiv.innerHTML += renderFull(item, "");
+        });
+        return;
+    }
+
     loading.style.display = "block";
 
     setTimeout(() => {
+
+        let found = data.filter(item => {
+            let val = item["Sitename"];
+            if(!val) return false;
+
+            let normVal = normalize(val);
+
+            // ✅ match đơn giản trước (quan trọng)
+            if(normVal.includes(keyword)) return true;
+
+            // ✅ fuzzy (gõ sai)
+            return levenshtein(normVal, keyword) <= 2;
+        });
+
+        loading.style.display = "none";
+
+        if(found.length === 0){
+            resultDiv.innerHTML = "<p><b>Không tìm thấy dữ liệu</b></p>";
+            return;
+        }
+
+        found.forEach(item => {
+            resultDiv.innerHTML += renderFull(item, keyword);
+        });
+
+    }, 200);
+}    setTimeout(() => {
         let found = data.filter(item => {
             let val = item["Sitename"]; // 🔥 key chuẩn
             return val && matchFuzzy(val, keyword);
