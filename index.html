@@ -8,34 +8,23 @@
 body {font-family: Arial; background:#eef3f7; padding:20px}
 h1 {text-align:center; color:#0066cc}
 input {width:100%; padding:12px; font-size:16px; border-radius:8px; border:1px solid #ccc}
-.card {background:white; padding:15px; margin-top:15px; border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.1); cursor:pointer}
-.title {color:#d81b60; font-weight:bold}
+.card {background:white; padding:15px; margin-top:15px; border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.1)}
+.title {color:#d81b60; font-weight:bold; margin-bottom:10px}
 .highlight {background:yellow; font-weight:bold}
-#detail {position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa; display:none; align-items:center; justify-content:center}
-.detail-box {background:white; padding:20px; border-radius:12px; width:90%; max-width:500px}
-.close {float:right; cursor:pointer; color:red}
 </style>
 </head>
 <body>
 
 <h1>TRA CỨU TRẠM MOBIFONE</h1>
-<input id="search" placeholder="Nhập Sitename cũ...">
+<input id="search" placeholder="Nhập Sitename cũ rồi Enter...">
 <div id="result"></div>
-
-<div id="detail">
-  <div class="detail-box">
-    <span class="close" onclick="closeDetail()">Đóng</span>
-    <div id="detailContent"></div>
-    <canvas id="qrcode"></canvas>
-  </div>
-</div>
 
 <script>
 let data = [];
 
 fetch("datatram.json")
 .then(res => res.json())
-.then(json => { data = json; render(data); });
+.then(json => { data = json; });
 
 function highlight(text, keyword){
     if(!keyword) return text;
@@ -43,47 +32,17 @@ function highlight(text, keyword){
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
-function render(list){
-    let keyword = document.getElementById("search").value.toLowerCase();
-    let result = document.getElementById("result");
-    result.innerHTML = "";
-
-    list.forEach(item => {
-        let name = item["Sitename cũ"] || "";
-        let html = `<div class='card' onclick='showDetail(${JSON.stringify(item)})'>
-            <div class='title'>${highlight(name, keyword)}</div>
-        </div>`;
-        result.innerHTML += html;
-    });
-}
-
-function showDetail(item){
-    let html = "";
-    for(let key in item){
-        html += `<div><b>${key}:</b> ${item[key]}</div>`;
+function renderFull(item, keyword){
+    let html = "<div class='card'>";
+    for (let key in item) {
+        let value = item[key] ? item[key].toString() : "";
+        html += `<div><b>${key}:</b> ${highlight(value, keyword)}</div>`;
     }
-
-    document.getElementById("detailContent").innerHTML = html;
-    document.getElementById("detail").style.display = "flex";
-
-    // QR code
-    let text = JSON.stringify(item);
-    let canvas = document.getElementById("qrcode");
-    QRCode.toCanvas(canvas, text);
+    html += "</div>";
+    return html;
 }
 
-function closeDetail(){
-    document.getElementById("detail").style.display = "none";
-}
-
-document.getElementById("search").addEventListener("input", function(){
-    let keyword = this.value.toLowerCase();
-    let filtered = data.filter(item =>
-        item["Sitename cũ"] && item["Sitename cũ"].toLowerCase().includes(keyword)
-    );
-    render(filtered);
-});
-</script>
-
-</body>
-</html>
+// tìm khi nhấn Enter
+document.getElementById("search").addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        let keyword = this.value.toL
