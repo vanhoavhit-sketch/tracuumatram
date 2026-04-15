@@ -58,28 +58,27 @@ function searchData(){
 
     setTimeout(()=>{
         let found = data.filter(item => {
-            let val = item["sitename_cu"];
+            let val = item["Sitename"]; // ✅ đúng key của bạn
             return val && normalize(val).includes(keyword);
         });
 
         loading.style.display = "none";
 
         if(found.length === 0){
-            result.innerHTML = "Không tìm thấy";
+            result.innerHTML = "<b>Không tìm thấy dữ liệu</b>";
             return;
         }
 
         found.forEach(item=>{
             let html = "<div class='card'>";
             for(let k in item){
-                html += "<div><b>"+k+":</b> "+highlight(item[k].toString(), keyword)+"</div>";
+                html += "<div><b>"+k+":</b> "+item[k]+"</div>";
             }
             html += "</div>";
             result.innerHTML += html;
         });
     },300);
 }
-
 function resetData(){
     document.getElementById("search").value = "";
     document.getElementById("result").innerHTML = "";
