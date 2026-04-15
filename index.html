@@ -1,96 +1,218 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Tra cứu trạm</title>
-  <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-    }
-    input, button {
-      padding: 8px;
-      font-size: 16px;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 20px;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background: #f4f4f4;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Tra cứu trạm Mobifone</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #e6f2ff, #ffffff);
+}
+
+/* Container */
+.container {
+  max-width: 1000px;
+  margin: 50px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Title */
+h2 {
+  text-align: center;
+  color: #0066cc;
+}
+
+/* Search */
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 5px #0066cc;
+}
+
+button {
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: none;
+  background: linear-gradient(45deg,#0066cc,#0099ff);
+  color: white;
+  cursor: pointer;
+}
+
+/* Loading */
+.loading {
+  display: none;
+  text-align: center;
+  margin-top: 15px;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+th {
+  background: #0066cc;
+  color: white;
+}
+
+/* Zebra */
+tbody tr:nth-child(even) {
+  background: #f2f8ff;
+}
+
+tbody tr:hover {
+  background: #d6ebff;
+  cursor: pointer;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .search-box {
+    flex-direction: column;
+  }
+}
+
+</style>
 </head>
+
 <body>
 
-<h2>Tra cứu thông tin trạm</h2>
+<div class="container">
+  <h2>TRA CỨU TRẠM MOBIFONE</h2>
 
-<input type="text" id="searchInput" placeholder="Nhập sitenamecu...">
-<button onclick="search()">Tìm kiếm</button>
+  <div class="search-box">
+    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+    <button onclick="exportExcel()">Export Excel</button>
+  </div>
 
-<table id="resultTable" style="display:none;">
-  <thead>
-    <tr>
-      <th>sitenamecu</th>
-      <th>sitenamemoi</th>
-      <th>địa chỉ</th>
-      <th>loại trạm</th>
-      <th>Long</th>
-      <th>Lat</th>
-      <th>NVQL</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <div class="loading" id="loading">🔄 Đang tải dữ liệu...</div>
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th>sitenamecu</th>
+        <th>sitenamemoi</th>
+        <th>địa chỉ</th>
+        <th>loại trạm</th>
+        <th>Long</th>
+        <th>Lat</th>
+        <th>NVQL</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 <script>
 let data = [];
+let filtered = [];
 
-// Load JSON
 fetch('dulieutram.json')
-  .then(response => response.json())
-  .then(json => data = json);
+.then(res => res.json())
+.then(json => {
+  data = json;
+  render(data);
+});
 
-// Search function
-function search() {
-  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-  const table = document.getElementById("resultTable");
-  const tbody = table.querySelector("tbody");
+// remove dấu
+function normalize(str) {
+  return str.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
 
+// render table
+function render(arr) {
+  const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
 
-  const result = data.filter(item => 
-    item.sitenamecu.toLowerCase().includes(keyword)
-  );
+  arr.forEach(item => {
+    const row = document.createElement("tr");
 
-  if (result.length === 0) {
-    alert("Không tìm thấy!");
-    table.style.display = "none";
-    return;
-  }
-
-  result.forEach(item => {
-    const row = `
-      <tr>
-        <td>${item.sitenamecu}</td>
-        <td>${item.sitenamemoi}</td>
-        <td>${item.diachi}</td>
-        <td>${item.loaitram}</td>
-        <td>${item.Long}</td>
-        <td>${item.Lat}</td>
-        <td>${item.NVQL}</td>
-      </tr>
+    row.innerHTML = `
+      <td>${item.sitenamecu}</td>
+      <td>${item.sitenamemoi}</td>
+      <td>${item.diachi}</td>
+      <td>${item.loaitram}</td>
+      <td>${item.Long}</td>
+      <td>${item.Lat}</td>
+      <td>${item.NVQL}</td>
     `;
-    tbody.innerHTML += row;
+
+    // click mở map
+    row.onclick = () => {
+      if(item.Lat && item.Long){
+        window.open(
+          `https://www.google.com/maps?q=${item.Lat},${item.Long}`
+        );
+      }
+    };
+
+    tbody.appendChild(row);
   });
 
-  table.style.display = "table";
+  filtered = arr;
+}
+
+// realtime search
+document.getElementById("searchInput").addEventListener("input", e => {
+  const keyword = normalize(e.target.value);
+
+  document.getElementById("loading").style.display = "block";
+
+  setTimeout(() => {
+    const result = data.filter(item =>
+      normalize(item.sitenamecu).includes(keyword) ||
+      normalize(item.sitenamemoi).includes(keyword) ||
+      normalize(item.diachi).includes(keyword)
+    );
+
+    render(result);
+    document.getElementById("loading").style.display = "none";
+  }, 300);
+});
+
+// export excel
+function exportExcel() {
+  let csv = "sitenamecu,sitenamemoi,diachi,loaitram,Long,Lat,NVQL\n";
+
+  filtered.forEach(i => {
+    csv += `${i.sitenamecu},${i.sitenamemoi},${i.diachi},${i.loaitram},${i.Long},${i.Lat},${i.NVQL}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "dulieu_tram.csv";
+  a.click();
 }
 </script>
 
