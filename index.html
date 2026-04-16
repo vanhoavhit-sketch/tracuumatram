@@ -116,35 +116,6 @@ button {
   border: none;
 }
 
-.star {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 20px;
-  cursor: pointer;
-  color: #ccc;
-}
-.star.active { color: gold; }
-
-.pagination {
-  display: none;
-  justify-content: center;
-  gap: 10px;
-  margin: 15px;
-}
-
-.page-btn {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #005bac;
-  color: white;
-}
-
-.page-btn:disabled {
-  background: #ccc;
-}
-
 .empty {
   text-align: center;
   color: #999;
@@ -177,7 +148,7 @@ button {
 
 <body>
 
-<!-- POPUP CHỌN KHU VỰC -->
+<!-- POPUP -->
 <div class="modal" id="regionModal">
   <div class="modal-box">
     <b>Chọn khu vực</b><br><br>
@@ -213,20 +184,11 @@ button {
 <div id="stats"></div>
 <div id="list"></div>
 
-<div class="pagination">
-  <button class="page-btn" id="prevBtn">←</button>
-  <span id="pageInfo"></span>
-  <button class="page-btn" id="nextBtn">→</button>
-</div>
-
 <script>
 let data = [];
 let regionData = [];
 let filtered = [];
 let currentPage = 1;
-const pageSize = 10;
-let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
-let activeId = null;
 
 fetch('dulieutram.json')
 .then(res => res.json())
@@ -235,10 +197,7 @@ fetch('dulieutram.json')
 // chọn khu vực
 function confirmRegion() {
   const code = document.getElementById("regionSelect").value;
-  if (!code) {
-    alert("Vui lòng chọn khu vực");
-    return;
-  }
+  if (!code) return alert("Vui lòng chọn khu vực");
 
   regionData = data.filter(item =>
     (item.sitenamecu || "").includes(code) ||
@@ -271,15 +230,29 @@ function goMap(lat, long) {
 // thống kê
 function renderStats(arr) {
   const statsDiv = document.getElementById("stats");
-  if (!arr.length) {
-    statsDiv.innerHTML = "";
-    return;
-  }
+  if (!arr.length) return statsDiv.innerHTML = "";
 
   const total = arr.length;
-  statsDiv.innerHTML = `<div class="stats-box">
-    <b>Tổng số trạm:</b> ${total}
-  </div>`;
+  const byXa = {};
+
+  arr.forEach(item => {
+    const xa = item.diachi || "Không rõ";
+    byXa[xa] = (byXa[xa] || 0) + 1;
+  });
+
+  let html = `<div class="stats-box">
+    <b>Tổng số trạm:</b> ${total}<br><br>
+    <b>Thống kê theo địa chỉ:</b><br>`;
+
+  Object.entries(byXa)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,5)
+    .forEach(([xa,count]) => {
+      html += `- ${xa}: ${count} trạm<br>`;
+    });
+
+  html += `</div>`;
+  statsDiv.innerHTML = html;
 }
 
 // render
@@ -289,32 +262,26 @@ function render(arr) {
 
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    renderStats([]);
     return;
   }
 
-  const start = (currentPage - 1) * pageSize;
-  const pageData = arr.slice(start, start + pageSize);
   const keyword = normalize(searchInput.value);
 
-  pageData.forEach((item, index) => {
-    const id = item.sitenamecu + index;
-    const isActive = activeId === id;
-
+  arr.forEach((item, index) => {
     const card = document.createElement("div");
-    card.className = "card " + (isActive ? "active" : "");
-
-    card.onclick = () => {
-      activeId = id;
-      render(filtered);
-    };
+    card.className = "card";
 
     card.innerHTML = `
-      <div class="row"><span class="label">Site:</span> ${highlight(item.sitenamecu, keyword)}</div>
+      <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
+      <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
       <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row">
         <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
-        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
+        <button class="map-btn" onclick="goMap('${item.Lat}','${item.Long}')">Đi đến</button>
       </div>
+      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
     `;
 
     list.appendChild(card);
@@ -325,17 +292,14 @@ function render(arr) {
 
 // search
 function doSearch(keyword) {
-  if (!regionData.length) {
-    alert("Chưa chọn khu vực");
-    return;
-  }
+  if (!regionData.length) return alert("Chưa chọn khu vực");
 
   filtered = regionData.filter(item =>
     normalize(item.sitenamecu).includes(keyword) ||
+    normalize(item.sitenamemoi).includes(keyword) ||
     normalize(item.diachi).includes(keyword)
   );
 
-  currentPage = 1;
   render(filtered);
 }
 
