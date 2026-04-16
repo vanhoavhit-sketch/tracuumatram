@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -12,6 +13,7 @@ body {
   background: #f2f4f8;
 }
 
+/* HEADER */
 .header {
   background: linear-gradient(90deg, #003366, #005bac);
   color: white;
@@ -20,6 +22,7 @@ body {
   font-weight: bold;
 }
 
+/* SEARCH */
 .search-box {
   padding: 15px;
   background: white;
@@ -42,6 +45,7 @@ input {
   margin-bottom: 8px;
 }
 
+/* BUTTON */
 .btn-group {
   display: flex;
   gap: 8px;
@@ -64,12 +68,14 @@ button {
   background: #f1f3f6;
 }
 
+/* LOADING */
 .loading {
   text-align: center;
   padding: 10px;
   display: none;
 }
 
+/* STATS */
 .stats-box {
   background: white;
   margin: 10px;
@@ -79,6 +85,7 @@ button {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
+/* CARD */
 .card {
   background: white;
   margin: 10px;
@@ -101,11 +108,13 @@ button {
   color: #003366;
 }
 
+/* HIGHLIGHT */
 .highlight {
   background: yellow;
   font-weight: bold;
 }
 
+/* MAP BUTTON */
 .map-btn {
   margin-left: 8px;
   padding: 4px 8px;
@@ -116,61 +125,51 @@ button {
   border: none;
 }
 
+/* FAVORITE */
+.star {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+.star.active { color: gold; }
+
+/* PAGINATION */
+.pagination {
+  display: none;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #005bac;
+  color: white;
+}
+
+.page-btn:disabled {
+  background: #ccc;
+}
+
 .empty {
   text-align: center;
   color: #999;
-}
-
-/* POPUP */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal-box {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 80%;
-  max-width: 300px;
-  text-align: center;
 }
 </style>
 </head>
 
 <body>
 
-<!-- POPUP -->
-<div class="modal" id="regionModal">
-  <div class="modal-box">
-    <b>Chọn khu vực</b><br><br>
-
-    <select id="regionSelect" style="width:100%;padding:10px;border-radius:8px;">
-      <option value="">-- Chọn khu vực --</option>
-      <option value="DLES">Ea Súp</option>
-      <option value="DLCG">Cư M’gar</option>
-      <option value="DLBD">Buôn Đôn</option>
-      <option value="DLKA">Krông Ana</option>
-    </select>
-
-    <br><br>
-    <button onclick="confirmRegion()" class="btn-search">Xác nhận</button>
-  </div>
-</div>
-
 <div class="header">MOBIFONE TRA CỨU TRẠM</div>
 
 <div class="search-box">
   <div class="search-inner">
-    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...cũ mới VD: DLES01">
 
     <div class="btn-group">
       <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
@@ -181,31 +180,28 @@ button {
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
 
+<!-- BOX THỐNG KÊ -->
 <div id="stats"></div>
+
 <div id="list"></div>
+
+<div class="pagination">
+  <button class="page-btn" id="prevBtn">←</button>
+  <span id="pageInfo"></span>
+  <button class="page-btn" id="nextBtn">→</button>
+</div>
 
 <script>
 let data = [];
-let regionData = [];
 let filtered = [];
 let currentPage = 1;
+const pageSize = 10;
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let activeId = null;
 
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
-
-// chọn khu vực
-function confirmRegion() {
-  const code = document.getElementById("regionSelect").value;
-  if (!code) return alert("Vui lòng chọn khu vực");
-
-  regionData = data.filter(item =>
-    (item.sitenamecu || "").includes(code) ||
-    (item.sitenamemoi || "").includes(code)
-  );
-
-  document.getElementById("regionModal").style.display = "none";
-}
 
 // normalize
 function normalize(str) {
@@ -222,6 +218,17 @@ function highlight(text, keyword) {
   return text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
+// favorite
+function toggleFav(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(i => i !== id);
+  } else {
+    favorites.push(id);
+  }
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  render(filtered);
+}
+
 // map
 function goMap(lat, long) {
   window.open(`https://www.google.com/maps?q=${lat},${long}`);
@@ -230,14 +237,19 @@ function goMap(lat, long) {
 // thống kê
 function renderStats(arr) {
   const statsDiv = document.getElementById("stats");
-  if (!arr.length) return statsDiv.innerHTML = "";
+
+  if (!arr.length) {
+    statsDiv.innerHTML = "";
+    return;
+  }
 
   const total = arr.length;
   const byXa = {};
 
   arr.forEach(item => {
     const xa = item.diachi || "Không rõ";
-    byXa[xa] = (byXa[xa] || 0) + 1;
+    if (!byXa[xa]) byXa[xa] = 0;
+    byXa[xa]++;
   });
 
   let html = `<div class="stats-box">
@@ -252,6 +264,7 @@ function renderStats(arr) {
     });
 
   html += `</div>`;
+
   statsDiv.innerHTML = html;
 }
 
@@ -262,24 +275,38 @@ function render(arr) {
 
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    document.querySelector(".pagination").style.display = "none";
     renderStats([]);
     return;
   }
 
+  const start = (currentPage - 1) * pageSize;
+  const pageData = arr.slice(start, start + pageSize);
   const keyword = normalize(searchInput.value);
 
-  arr.forEach((item, index) => {
+  pageData.forEach((item, index) => {
+    const id = item.sitenamecu + index;
+    const isFav = favorites.includes(id);
+    const isActive = activeId === id;
+
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card " + (isActive ? "active" : "");
+
+    card.onclick = () => {
+      activeId = id;
+      render(filtered);
+    };
 
     card.innerHTML = `
+      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+
       <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
       <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
       <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
       <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row">
         <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
-        <button class="map-btn" onclick="goMap('${item.Lat}','${item.Long}')">Đi đến</button>
+        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
       </div>
       <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
     `;
@@ -287,22 +314,55 @@ function render(arr) {
     list.appendChild(card);
   });
 
+  updatePagination(arr.length);
   renderStats(arr);
+}
+
+// pagination
+function updatePagination(total) {
+  const pagination = document.querySelector(".pagination");
+
+  if (total <= pageSize) {
+    pagination.style.display = "none";
+    return;
+  }
+
+  pagination.style.display = "flex";
+
+  const totalPages = Math.ceil(total / pageSize);
+  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
 }
 
 // search
 function doSearch(keyword) {
-  if (!regionData.length) return alert("Chưa chọn khu vực");
+  const loading = document.getElementById("loading");
 
-  filtered = regionData.filter(item =>
-    normalize(item.sitenamecu).includes(keyword) ||
-    normalize(item.sitenamemoi).includes(keyword) ||
-    normalize(item.diachi).includes(keyword)
-  );
+  if (!keyword) {
+    list.innerHTML = "";
+    document.getElementById("stats").innerHTML = "";
+    document.querySelector(".pagination").style.display = "none";
+    return;
+  }
 
-  render(filtered);
+  loading.style.display = "block";
+
+  setTimeout(() => {
+    filtered = data.filter(item =>
+      normalize(item.sitenamecu).includes(keyword) ||
+      normalize(item.sitenamemoi).includes(keyword) ||
+      normalize(item.diachi).includes(keyword)
+    );
+
+    currentPage = 1;
+    render(filtered);
+    loading.style.display = "none";
+  }, 300);
 }
 
+// events
 searchInput.addEventListener("input", e => {
   doSearch(normalize(e.target.value));
 });
@@ -313,9 +373,20 @@ function handleSearch() {
 
 function clearSearch() {
   searchInput.value = "";
-  document.getElementById("list").innerHTML = "";
+  list.innerHTML = "";
   document.getElementById("stats").innerHTML = "";
+  document.querySelector(".pagination").style.display = "none";
 }
+
+prevBtn.onclick = () => {
+  currentPage--;
+  render(filtered);
+};
+
+nextBtn.onclick = () => {
+  currentPage++;
+  render(filtered);
+};
 </script>
 
 </body>
