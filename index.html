@@ -29,13 +29,11 @@ body {
   justify-content: center;
   position: sticky;
   top: 0;
-  z-index: 10;
 }
 
 .search-inner {
   width: 90%;
   max-width: 400px;
-  position: relative;
 }
 
 input {
@@ -69,27 +67,6 @@ button {
   background: #f1f3f6;
 }
 
-/* AUTOCOMPLETE */
-.suggestion-box {
-  position: absolute;
-  width: 100%;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  z-index: 999;
-  overflow: hidden;
-}
-
-.suggestion-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.suggestion-item:hover {
-  background: #f1f5ff;
-}
-
 /* LOADING */
 .loading {
   text-align: center;
@@ -114,6 +91,8 @@ button {
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  position: relative;
+  transition: 0.2s;
 }
 
 .card.active {
@@ -128,12 +107,13 @@ button {
   color: #003366;
 }
 
+/* 🔴 TEXT RED */
 .text-red {
   color: #d60000;
   font-weight: bold;
 }
 
-/* MAP */
+/* MAP BUTTON */
 .map-btn {
   margin-left: 8px;
   padding: 4px 8px;
@@ -143,6 +123,17 @@ button {
   color: white;
   border: none;
 }
+
+/* FAVORITE */
+.star {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+.star.active { color: gold; }
 
 /* PAGINATION */
 .pagination {
@@ -160,6 +151,10 @@ button {
   color: white;
 }
 
+.page-btn:disabled {
+  background: #ccc;
+}
+
 .empty {
   text-align: center;
   color: #999;
@@ -173,8 +168,7 @@ button {
 
 <div class="search-box">
   <div class="search-inner">
-    <input id="searchInput" placeholder="Nhập sitename / địa chỉ... VD: DLES01">
-    <div id="suggestions" class="suggestion-box" style="display:none;"></div>
+    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...cũ mới VD: DLES01">
 
     <div class="btn-group">
       <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
@@ -184,6 +178,7 @@ button {
 </div>
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
+
 <div id="stats"></div>
 <div id="list"></div>
 
@@ -198,6 +193,8 @@ let data = [];
 let filtered = [];
 let currentPage = 1;
 const pageSize = 10;
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let activeId = null;
 
 fetch('dulieutram.json')
 .then(res => res.json())
@@ -211,116 +208,173 @@ function normalize(str) {
     .toLowerCase();
 }
 
-/* 👉 GỢI Ý CHỈ ĐỂ XEM */
-function showSuggestions(keyword) {
-  const box = document.getElementById("suggestions");
+// favorite
+function toggleFav(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(i => i !== id);
+  } else {
+    favorites.push(id);
+  }
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  render(filtered);
+}
+
+// map
+function goMap(lat, long) {
+  window.open(`https://www.google.com/maps?q=${lat},${long}`);
+}
+
+// thống kê
+function renderStats(arr) {
+  const statsDiv = document.getElementById("stats");
+
+  if (!arr.length) {
+    statsDiv.innerHTML = "";
+    return;
+  }
+
+  const total = arr.length;
+  const byXa = {};
+
+  arr.forEach(item => {
+    const xa = item.diachi || "Không rõ";
+    if (!byXa[xa]) byXa[xa] = 0;
+    byXa[xa]++;
+  });
+
+  let html = `<div class="stats-box">
+    <b>Tổng số trạm:</b> ${total}<br><br>
+    <b>Thống kê theo địa chỉ:</b><br>`;
+
+  Object.entries(byXa)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,5)
+    .forEach(([xa,count]) => {
+      html += `- ${xa}: ${count} trạm<br>`;
+    });
+
+  html += `</div>`;
+
+  statsDiv.innerHTML = html;
+}
+
+// render
+function render(arr) {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  if (!arr.length) {
+    list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    document.querySelector(".pagination").style.display = "none";
+    renderStats([]);
+    return;
+  }
+
+  const start = (currentPage - 1) * pageSize;
+  const pageData = arr.slice(start, start + pageSize);
+
+  pageData.forEach((item, index) => {
+    const id = item.sitenamecu + index;
+    const isFav = favorites.includes(id);
+    const isActive = activeId === id;
+
+    const card = document.createElement("div");
+    card.className = "card " + (isActive ? "active" : "");
+
+    card.onclick = () => {
+      activeId = id;
+      render(filtered);
+    };
+
+    card.innerHTML = `
+      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+
+      <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
+      <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
+      <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
+      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
+      <div class="row">
+        <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
+        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
+      </div>
+      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
+    `;
+
+    list.appendChild(card);
+  });
+
+  updatePagination(arr.length);
+  renderStats(arr);
+}
+
+// pagination
+function updatePagination(total) {
+  const pagination = document.querySelector(".pagination");
+
+  if (total <= pageSize) {
+    pagination.style.display = "none";
+    return;
+  }
+
+  pagination.style.display = "flex";
+
+  const totalPages = Math.ceil(total / pageSize);
+  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
+}
+
+// search
+function doSearch(keyword) {
+  const loading = document.getElementById("loading");
 
   if (!keyword) {
-    box.style.display = "none";
+    list.innerHTML = "";
+    document.getElementById("stats").innerHTML = "";
+    document.querySelector(".pagination").style.display = "none";
     return;
   }
 
-  const result = data.filter(item =>
-    normalize(item.sitenamecu).includes(keyword)
-  ).slice(0,5);
+  loading.style.display = "block";
 
-  if (!result.length) {
-    box.style.display = "none";
-    return;
-  }
-
-  box.innerHTML = result.map(item => `
-    <div class="suggestion-item"
-      onclick="fillInput('${item.sitenamecu}')">
-      ${item.sitenamecu} - ${item.sitenamemoi}
-    </div>
-  `).join("");
-
-  box.style.display = "block";
-}
-
-/* 👉 chỉ fill, KHÔNG search */
-function fillInput(val) {
-  searchInput.value = val;
-}
-
-/* Ẩn gợi ý khi click ngoài */
-document.addEventListener("click", e => {
-  if (!e.target.closest(".search-inner")) {
-    document.getElementById("suggestions").style.display = "none";
-  }
-});
-
-// SEARCH
-function doSearch(keyword){
-  const loading=document.getElementById("loading");
-
-  if(!keyword){
-    list.innerHTML="";
-    document.getElementById("stats").innerHTML="";
-    document.querySelector(".pagination").style.display="none";
-    return;
-  }
-
-  loading.style.display="block";
-
-  setTimeout(()=>{
-    filtered=data.filter(item =>
+  setTimeout(() => {
+    filtered = data.filter(item =>
       normalize(item.sitenamecu).includes(keyword) ||
       normalize(item.sitenamemoi).includes(keyword) ||
       normalize(item.diachi).includes(keyword)
     );
 
-    currentPage=1;
+    currentPage = 1;
     render(filtered);
-    loading.style.display="none";
-  },300);
+    loading.style.display = "none";
+  }, 300);
 }
 
-// render
-function render(arr){
-  const list=document.getElementById("list");
-  list.innerHTML="";
-
-  if(!arr.length){
-    list.innerHTML=`<div class="empty">Không có dữ liệu</div>`;
-    return;
-  }
-
-  arr.slice(0,10).forEach(item=>{
-    list.innerHTML+=`
-      <div class="card">
-        <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
-        <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
-        <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
-      </div>
-    `;
-  });
-}
-
-// EVENTS
-searchInput.addEventListener("input", e=>{
-  showSuggestions(normalize(e.target.value));
+searchInput.addEventListener("input", e => {
+  doSearch(normalize(e.target.value));
 });
 
-/* ENTER = SEARCH */
-searchInput.addEventListener("keypress", e=>{
-  if(e.key === "Enter"){
-    handleSearch();
-  }
-});
-
-function handleSearch(){
+function handleSearch() {
   doSearch(normalize(searchInput.value));
-  document.getElementById("suggestions").style.display="none";
 }
 
-function clearSearch(){
-  searchInput.value="";
-  list.innerHTML="";
-  document.getElementById("stats").innerHTML="";
-  document.getElementById("suggestions").style.display="none";
+function clearSearch() {
+  searchInput.value = "";
+  list.innerHTML = "";
+  document.getElementById("stats").innerHTML = "";
+  document.querySelector(".pagination").style.display = "none";
 }
+
+prevBtn.onclick = () => {
+  currentPage--;
+  render(filtered);
+};
+
+nextBtn.onclick = () => {
+  currentPage++;
+  render(filtered);
+};
 </script>
 
 </body>
