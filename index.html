@@ -29,11 +29,13 @@ body {
   justify-content: center;
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
 .search-inner {
   width: 90%;
   max-width: 400px;
+  position: relative;
 }
 
 input {
@@ -65,6 +67,28 @@ button {
 
 .btn-clear {
   background: #f1f3f6;
+}
+
+/* AUTOCOMPLETE */
+.suggestion-box {
+  position: absolute;
+  width: 100%;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  z-index: 999;
+  overflow: hidden;
+}
+
+.suggestion-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.suggestion-item:hover {
+  background: #f1f5ff;
 }
 
 /* LOADING */
@@ -107,7 +131,7 @@ button {
   color: #003366;
 }
 
-/* 🔴 TEXT RED */
+/* TEXT RED */
 .text-red {
   color: #d60000;
   font-weight: bold;
@@ -168,7 +192,8 @@ button {
 
 <div class="search-box">
   <div class="search-inner">
-    <input id="searchInput" placeholder="Nhập sitename / địa chỉ...cũ mới VD: DLES01">
+    <input id="searchInput" placeholder="Nhập sitename / địa chỉ... VD: DLES01">
+    <div id="suggestions" class="suggestion-box" style="display:none;"></div>
 
     <div class="btn-group">
       <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
@@ -178,7 +203,6 @@ button {
 </div>
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
-
 <div id="stats"></div>
 <div id="list"></div>
 
@@ -208,7 +232,48 @@ function normalize(str) {
     .toLowerCase();
 }
 
-// favorite
+// AUTOCOMPLETE
+function showSuggestions(keyword) {
+  const box = document.getElementById("suggestions");
+
+  if (!keyword) {
+    box.style.display = "none";
+    return;
+  }
+
+  const result = data.filter(item =>
+    normalize(item.sitenamecu).includes(keyword) ||
+    normalize(item.sitenamemoi).includes(keyword)
+  ).slice(0,5);
+
+  if (!result.length) {
+    box.style.display = "none";
+    return;
+  }
+
+  box.innerHTML = result.map(item => `
+    <div class="suggestion-item"
+      onclick="selectSuggestion('${item.sitenamecu}')">
+      ${item.sitenamecu} - ${item.sitenamemoi}
+    </div>
+  `).join("");
+
+  box.style.display = "block";
+}
+
+function selectSuggestion(val) {
+  searchInput.value = val;
+  document.getElementById("suggestions").style.display = "none";
+  handleSearch();
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-inner")) {
+    document.getElementById("suggestions").style.display = "none";
+  }
+});
+
+// FAVORITE
 function toggleFav(id) {
   if (favorites.includes(id)) {
     favorites = favorites.filter(i => i !== id);
@@ -219,12 +284,12 @@ function toggleFav(id) {
   render(filtered);
 }
 
-// map
+// MAP
 function goMap(lat, long) {
   window.open(`https://www.google.com/maps?q=${lat},${long}`);
 }
 
-// thống kê
+// STATS
 function renderStats(arr) {
   const statsDiv = document.getElementById("stats");
 
@@ -247,18 +312,17 @@ function renderStats(arr) {
     <b>Thống kê theo địa chỉ:</b><br>`;
 
   Object.entries(byXa)
-    .sort((a,b) => b[1] - a[1])
+    .sort((a,b)=>b[1]-a[1])
     .slice(0,5)
-    .forEach(([xa,count]) => {
+    .forEach(([xa,count])=>{
       html += `- ${xa}: ${count} trạm<br>`;
     });
 
   html += `</div>`;
-
   statsDiv.innerHTML = html;
 }
 
-// render
+// RENDER
 function render(arr) {
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -270,10 +334,10 @@ function render(arr) {
     return;
   }
 
-  const start = (currentPage - 1) * pageSize;
-  const pageData = arr.slice(start, start + pageSize);
+  const start = (currentPage-1)*pageSize;
+  const pageData = arr.slice(start, start+pageSize);
 
-  pageData.forEach((item, index) => {
+  pageData.forEach((item,index)=>{
     const id = item.sitenamecu + index;
     const isFav = favorites.includes(id);
     const isActive = activeId === id;
@@ -287,7 +351,7 @@ function render(arr) {
     };
 
     card.innerHTML = `
-      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+      <div class="star ${isFav ? "active":""}" onclick="event.stopPropagation();toggleFav('${id}')">★</div>
 
       <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
       <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
@@ -295,7 +359,7 @@ function render(arr) {
       <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row">
         <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
-        <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">Đi đến</button>
+        <button class="map-btn" onclick="event.stopPropagation();goMap('${item.Lat}','${item.Long}')">Đi đến</button>
       </div>
       <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
     `;
@@ -307,71 +371,74 @@ function render(arr) {
   renderStats(arr);
 }
 
-// pagination
-function updatePagination(total) {
-  const pagination = document.querySelector(".pagination");
+// PAGINATION
+function updatePagination(total){
+  const pagination=document.querySelector(".pagination");
 
-  if (total <= pageSize) {
-    pagination.style.display = "none";
+  if(total<=pageSize){
+    pagination.style.display="none";
     return;
   }
 
-  pagination.style.display = "flex";
+  pagination.style.display="flex";
 
-  const totalPages = Math.ceil(total / pageSize);
-  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
+  const totalPages=Math.ceil(total/pageSize);
+  pageInfo.innerText=`Trang ${currentPage}/${totalPages}`;
 
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
+  prevBtn.disabled=currentPage===1;
+  nextBtn.disabled=currentPage===totalPages;
 }
 
-// search
-function doSearch(keyword) {
-  const loading = document.getElementById("loading");
+// SEARCH
+function doSearch(keyword){
+  const loading=document.getElementById("loading");
 
-  if (!keyword) {
-    list.innerHTML = "";
-    document.getElementById("stats").innerHTML = "";
-    document.querySelector(".pagination").style.display = "none";
+  if(!keyword){
+    list.innerHTML="";
+    document.getElementById("stats").innerHTML="";
+    document.querySelector(".pagination").style.display="none";
     return;
   }
 
-  loading.style.display = "block";
+  loading.style.display="block";
 
-  setTimeout(() => {
-    filtered = data.filter(item =>
+  setTimeout(()=>{
+    filtered=data.filter(item =>
       normalize(item.sitenamecu).includes(keyword) ||
       normalize(item.sitenamemoi).includes(keyword) ||
       normalize(item.diachi).includes(keyword)
     );
 
-    currentPage = 1;
+    currentPage=1;
     render(filtered);
-    loading.style.display = "none";
-  }, 300);
+    loading.style.display="none";
+  },300);
 }
 
-searchInput.addEventListener("input", e => {
-  doSearch(normalize(e.target.value));
+// EVENTS
+searchInput.addEventListener("input", e=>{
+  const keyword=normalize(e.target.value);
+  showSuggestions(keyword);
+  doSearch(keyword);
 });
 
-function handleSearch() {
+function handleSearch(){
   doSearch(normalize(searchInput.value));
 }
 
-function clearSearch() {
-  searchInput.value = "";
-  list.innerHTML = "";
-  document.getElementById("stats").innerHTML = "";
-  document.querySelector(".pagination").style.display = "none";
+function clearSearch(){
+  searchInput.value="";
+  list.innerHTML="";
+  document.getElementById("stats").innerHTML="";
+  document.querySelector(".pagination").style.display="none";
 }
 
-prevBtn.onclick = () => {
+prevBtn.onclick=()=>{
   currentPage--;
   render(filtered);
 };
 
-nextBtn.onclick = () => {
+nextBtn.onclick=()=>{
   currentPage++;
   render(filtered);
 };
