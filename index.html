@@ -8,146 +8,73 @@
 <link rel="icon" href="favicon.ico">
 
 <style>
-body {
-  margin: 0;
-  font-family: "Segoe UI", Arial;
-  background: #f2f4f8;
-}
+body { margin:0; font-family:"Segoe UI"; background:#f2f4f8;}
+.header {background:linear-gradient(90deg,#003366,#005bac);color:white;padding:15px;text-align:center;font-weight:bold;}
 
-.header {
-  background: linear-gradient(90deg, #003366, #005bac);
-  color: white;
-  padding: 15px;
-  text-align: center;
-  font-weight: bold;
-}
+.search-box {padding:15px;background:white;display:flex;justify-content:center;}
+.search-inner {width:90%;max-width:400px;}
 
-.search-box {
-  padding: 15px;
-  background: white;
-  display: flex;
-  justify-content: center;
-}
+input {width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:6px;}
 
-.search-inner {
-  width: 90%;
-  max-width: 400px;
-}
+.btn-group {display:flex;gap:8px;}
+button {flex:1;padding:10px;border-radius:10px;border:none;font-weight:bold;}
+.btn-search {background:linear-gradient(135deg,#005bac,#007bff);color:white;}
+.btn-clear {background:#f1f3f6;}
 
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 6px;
-}
+.loading {text-align:center;padding:10px;display:none;}
 
-.btn-group {
-  display: flex;
-  gap: 8px;
-}
-
-button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-weight: bold;
-}
-
-.btn-search {
-  background: linear-gradient(135deg, #005bac, #007bff);
-  color: white;
-}
-
-.btn-clear {
-  background: #f1f3f6;
-}
-
-.loading {
-  text-align: center;
-  padding: 10px;
-  display: none;
-}
-
-/* CARD */
 .card {
-  background: white;
-  margin: 10px;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  position: relative;
+  background:white;margin:10px;padding:15px;border-radius:12px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);position:relative;
 }
+.card.active {background:#e6f0ff;border:1px solid #007bff;}
 
-/* highlight */
-.card.active {
-  background: #e6f0ff;
-  border: 1px solid #007bff;
-}
-
-/* CANH LỀ */
 .row {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  margin-bottom: 6px;
-  font-size: 13px;
+  display:grid;
+  grid-template-columns:140px 1fr;
+  margin-bottom:6px;
+  font-size:13px;
 }
 
-.label {
-  font-weight: 600;
-  color: #003366;
-}
+.label {font-weight:600;color:#003366;}
+.value {word-break:break-word;}
+.text-red {color:red;font-weight:bold;}
 
-.value {
-  word-break: break-word;
-}
-
-.text-red {
-  color: red;
-  font-weight: bold;
-}
-
-.coord {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+.coord {display:flex;gap:6px;flex-wrap:wrap;}
 
 .map-btn {
-  padding: 3px 7px;
-  font-size: 11px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #005bac, #007bff);
-  color: white;
+  padding:3px 7px;font-size:11px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,#005bac,#007bff);color:white;
 }
 
 .star {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  cursor: pointer;
-  font-size: 18px;
-  color: #ccc;
+  position:absolute;top:10px;right:10px;
+  cursor:pointer;font-size:18px;color:#ccc;
 }
-
-.star.active {
-  color: gold;
-}
+.star.active {color:gold;}
 
 .stats-box {
-  background: white;
-  margin: 10px;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 13px;
+  background:white;margin:10px;padding:12px;border-radius:12px;font-size:13px;
 }
 
-.empty {
-  text-align: center;
-  color: #999;
+.pagination {
+  display:none;
+  justify-content:center;
+  gap:10px;
+  margin:15px;
 }
+
+.page-btn {
+  padding:6px 12px;
+  border-radius:6px;
+  border:none;
+  background:#005bac;
+  color:white;
+}
+
+.page-btn:disabled {background:#ccc;}
+
+.empty {text-align:center;color:#999;}
 </style>
 </head>
 
@@ -171,78 +98,91 @@ button {
 <div id="stats"></div>
 <div id="list"></div>
 
+<div class="pagination" id="pagination">
+  <button class="page-btn" id="prevBtn">←</button>
+  <span id="pageInfo"></span>
+  <button class="page-btn" id="nextBtn">→</button>
+</div>
+
 <script>
 let data = [];
 let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+
+let filtered = [];
+let currentPage = 1;
+const pageSize = 10;
 
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
 
-function normalize(str) {
-  return (str || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+function normalize(str){
+  return (str||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 }
 
-function handleSearch() {
+function handleSearch(){
   doSearch(normalize(searchInput.value));
 }
 
-function clearSearch() {
-  searchInput.value = "";
-  list.innerHTML = "";
-  stats.innerHTML = "";
+function clearSearch(){
+  searchInput.value="";
+  list.innerHTML="";
+  stats.innerHTML="";
+  pagination.style.display="none";
 }
 
-function doSearch(keyword) {
-  const loading = document.getElementById("loading");
+function doSearch(keyword){
+  const loading=document.getElementById("loading");
 
-  if (!keyword) {
-    list.innerHTML = "";
-    stats.innerHTML = "";
+  if(!keyword){
+    list.innerHTML="";
+    stats.innerHTML="";
+    pagination.style.display="none";
     return;
   }
 
-  loading.style.display = "block";
+  loading.style.display="block";
 
-  setTimeout(() => {
-    const result = data.filter(item =>
+  setTimeout(()=>{
+    filtered = data.filter(item =>
       normalize(item.sitenamecu).includes(keyword) ||
       normalize(item.sitenamemoi).includes(keyword) ||
       normalize(item.diachi).includes(keyword)
     );
 
-    render(result);
-    loading.style.display = "none";
-  }, 300);
+    currentPage = 1;
+    render();
+    loading.style.display="none";
+  },300);
 }
 
-function render(arr) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+function render(){
+  const list=document.getElementById("list");
+  list.innerHTML="";
 
-  if (!arr.length) {
-    list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+  if(!filtered.length){
+    list.innerHTML=`<div class="empty">Không có dữ liệu</div>`;
     renderStats([]);
     return;
   }
 
-  arr.forEach(item => {
-    const id = item.sitenamecu;
-    const isFav = favorites.includes(id);
+  const start = (currentPage-1)*pageSize;
+  const pageData = filtered.slice(start,start+pageSize);
 
-    const card = document.createElement("div");
-    card.className = "card";
+  pageData.forEach(item=>{
+    const id=item.sitenamecu;
+    const isFav=favorites.includes(id);
 
-    card.onclick = () => {
-      document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+    const card=document.createElement("div");
+    card.className="card";
+
+    card.onclick=()=>{
+      document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
       card.classList.add("active");
     };
 
-    card.innerHTML = `
-      <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
+    card.innerHTML=`
+      <div class="star ${isFav?"active":""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
 
       <div class="row"><span class="label">Mã trạm mới:</span><span class="value text-red">${item.sitenamemoi}</span></div>
       <div class="row"><span class="label">Mã trạm cũ:</span><span class="value text-red">${item.sitenamecu}</span></div>
@@ -264,53 +204,80 @@ function render(arr) {
     list.appendChild(card);
   });
 
-  renderStats(arr);
+  renderStats(filtered);
+  updatePagination();
 }
 
-function renderStats(arr) {
-  const statsDiv = document.getElementById("stats");
+function updatePagination(){
+  const total = filtered.length;
+  const totalPages = Math.ceil(total/pageSize);
 
-  if (!arr.length) {
-    statsDiv.innerHTML = "";
+  if(total <= pageSize){
+    pagination.style.display="none";
     return;
   }
 
-  const total = arr.length;
-  const byXa = {};
+  pagination.style.display="flex";
 
-  arr.forEach(item => {
-    const xa = item.diachi || "Không rõ";
-    if (!byXa[xa]) byXa[xa] = 0;
+  pageInfo.innerText = `Trang ${currentPage}/${totalPages}`;
+  prevBtn.disabled = currentPage===1;
+  nextBtn.disabled = currentPage===totalPages;
+}
+
+prevBtn.onclick=()=>{
+  currentPage--;
+  render();
+};
+
+nextBtn.onclick=()=>{
+  currentPage++;
+  render();
+};
+
+function renderStats(arr){
+  const statsDiv=document.getElementById("stats");
+
+  if(!arr.length){
+    statsDiv.innerHTML="";
+    return;
+  }
+
+  const total=arr.length;
+  const byXa={};
+
+  arr.forEach(item=>{
+    const xa=item.diachi||"Không rõ";
+    if(!byXa[xa]) byXa[xa]=0;
     byXa[xa]++;
   });
 
-  let html = `<div class="stats-box">
+  let html=`<div class="stats-box">
     <b>Tổng số trạm:</b> ${total}<br><br>
     <b>Thống kê theo địa chỉ:</b><br>`;
 
   Object.entries(byXa)
-    .sort((a,b) => b[1] - a[1])
+    .sort((a,b)=>b[1]-a[1])
     .slice(0,5)
-    .forEach(([xa,count]) => {
-      html += `- ${xa}: ${count} trạm<br>`;
+    .forEach(([xa,count])=>{
+      html+=`- ${xa}: ${count} trạm<br>`;
     });
 
-  html += `</div>`;
+  html+=`</div>`;
 
-  statsDiv.innerHTML = html;
+  statsDiv.innerHTML=html;
 }
 
-function toggleFav(id) {
-  if (favorites.includes(id)) {
-    favorites = favorites.filter(x => x !== id);
-  } else {
+function toggleFav(id){
+  if(favorites.includes(id)){
+    favorites=favorites.filter(x=>x!==id);
+  }else{
     favorites.push(id);
   }
-  localStorage.setItem("fav", JSON.stringify(favorites));
-  handleSearch();
+  localStorage.setItem("fav",JSON.stringify(favorites));
+  render();
 }
 
-function goMap(lat, long) {
+function goMap(lat,long){
   window.open(`https://www.google.com/maps?q=${lat},${long}`);
 }
 </script>
