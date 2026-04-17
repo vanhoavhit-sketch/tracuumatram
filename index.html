@@ -84,7 +84,6 @@ button {
   padding: 10px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
-  font-size: 14px;
 }
 
 .suggestion-item:hover {
@@ -116,7 +115,6 @@ button {
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
   position: relative;
-  transition: 0.2s;
 }
 
 .card.active {
@@ -131,13 +129,12 @@ button {
   color: #003366;
 }
 
-/* TEXT RED */
 .text-red {
   color: #d60000;
   font-weight: bold;
 }
 
-/* MAP BUTTON */
+/* MAP */
 .map-btn {
   margin-left: 8px;
   padding: 4px 8px;
@@ -232,7 +229,7 @@ function normalize(str) {
     .toLowerCase();
 }
 
-// AUTOCOMPLETE
+/* 👉 CHỈ GỢI Ý - KHÔNG SEARCH */
 function showSuggestions(keyword) {
   const box = document.getElementById("suggestions");
 
@@ -415,21 +412,22 @@ function doSearch(keyword){
   },300);
 }
 
-// EVENTS
+// 👉 CHỈ GỌI GỢI Ý
 searchInput.addEventListener("input", e=>{
   const keyword=normalize(e.target.value);
   showSuggestions(keyword);
-  doSearch(keyword);
 });
 
 function handleSearch(){
   doSearch(normalize(searchInput.value));
+  document.getElementById("suggestions").style.display="none";
 }
 
 function clearSearch(){
   searchInput.value="";
   list.innerHTML="";
   document.getElementById("stats").innerHTML="";
+  document.getElementById("suggestions").style.display="none";
   document.querySelector(".pagination").style.display="none";
 }
 
