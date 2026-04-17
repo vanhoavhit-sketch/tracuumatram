@@ -114,7 +114,6 @@ button {
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  position: relative;
 }
 
 .card.active {
@@ -145,17 +144,6 @@ button {
   border: none;
 }
 
-/* FAVORITE */
-.star {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 20px;
-  cursor: pointer;
-  color: #ccc;
-}
-.star.active { color: gold; }
-
 /* PAGINATION */
 .pagination {
   display: none;
@@ -170,10 +158,6 @@ button {
   border: none;
   background: #005bac;
   color: white;
-}
-
-.page-btn:disabled {
-  background: #ccc;
 }
 
 .empty {
@@ -214,8 +198,6 @@ let data = [];
 let filtered = [];
 let currentPage = 1;
 const pageSize = 10;
-let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
-let activeId = null;
 
 fetch('dulieutram.json')
 .then(res => res.json())
@@ -229,7 +211,7 @@ function normalize(str) {
     .toLowerCase();
 }
 
-/* 👉 CHỈ GỢI Ý - KHÔNG SEARCH */
+/* 👉 GỢI Ý CHỈ ĐỂ XEM */
 function showSuggestions(keyword) {
   const box = document.getElementById("suggestions");
 
@@ -239,8 +221,7 @@ function showSuggestions(keyword) {
   }
 
   const result = data.filter(item =>
-    normalize(item.sitenamecu).includes(keyword) ||
-    normalize(item.sitenamemoi).includes(keyword)
+    normalize(item.sitenamecu).includes(keyword)
   ).slice(0,5);
 
   if (!result.length) {
@@ -250,7 +231,7 @@ function showSuggestions(keyword) {
 
   box.innerHTML = result.map(item => `
     <div class="suggestion-item"
-      onclick="selectSuggestion('${item.sitenamecu}')">
+      onclick="fillInput('${item.sitenamecu}')">
       ${item.sitenamecu} - ${item.sitenamemoi}
     </div>
   `).join("");
@@ -258,133 +239,17 @@ function showSuggestions(keyword) {
   box.style.display = "block";
 }
 
-function selectSuggestion(val) {
+/* 👉 chỉ fill, KHÔNG search */
+function fillInput(val) {
   searchInput.value = val;
-  document.getElementById("suggestions").style.display = "none";
-  handleSearch();
 }
 
+/* Ẩn gợi ý khi click ngoài */
 document.addEventListener("click", e => {
   if (!e.target.closest(".search-inner")) {
     document.getElementById("suggestions").style.display = "none";
   }
 });
-
-// FAVORITE
-function toggleFav(id) {
-  if (favorites.includes(id)) {
-    favorites = favorites.filter(i => i !== id);
-  } else {
-    favorites.push(id);
-  }
-  localStorage.setItem("fav", JSON.stringify(favorites));
-  render(filtered);
-}
-
-// MAP
-function goMap(lat, long) {
-  window.open(`https://www.google.com/maps?q=${lat},${long}`);
-}
-
-// STATS
-function renderStats(arr) {
-  const statsDiv = document.getElementById("stats");
-
-  if (!arr.length) {
-    statsDiv.innerHTML = "";
-    return;
-  }
-
-  const total = arr.length;
-  const byXa = {};
-
-  arr.forEach(item => {
-    const xa = item.diachi || "Không rõ";
-    if (!byXa[xa]) byXa[xa] = 0;
-    byXa[xa]++;
-  });
-
-  let html = `<div class="stats-box">
-    <b>Tổng số trạm:</b> ${total}<br><br>
-    <b>Thống kê theo địa chỉ:</b><br>`;
-
-  Object.entries(byXa)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,5)
-    .forEach(([xa,count])=>{
-      html += `- ${xa}: ${count} trạm<br>`;
-    });
-
-  html += `</div>`;
-  statsDiv.innerHTML = html;
-}
-
-// RENDER
-function render(arr) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  if (!arr.length) {
-    list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
-    document.querySelector(".pagination").style.display = "none";
-    renderStats([]);
-    return;
-  }
-
-  const start = (currentPage-1)*pageSize;
-  const pageData = arr.slice(start, start+pageSize);
-
-  pageData.forEach((item,index)=>{
-    const id = item.sitenamecu + index;
-    const isFav = favorites.includes(id);
-    const isActive = activeId === id;
-
-    const card = document.createElement("div");
-    card.className = "card " + (isActive ? "active" : "");
-
-    card.onclick = () => {
-      activeId = id;
-      render(filtered);
-    };
-
-    card.innerHTML = `
-      <div class="star ${isFav ? "active":""}" onclick="event.stopPropagation();toggleFav('${id}')">★</div>
-
-      <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
-      <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
-      <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
-      <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
-      <div class="row">
-        <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
-        <button class="map-btn" onclick="event.stopPropagation();goMap('${item.Lat}','${item.Long}')">Đi đến</button>
-      </div>
-      <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
-    `;
-
-    list.appendChild(card);
-  });
-
-  updatePagination(arr.length);
-  renderStats(arr);
-}
-
-// PAGINATION
-function updatePagination(total){
-  const pagination=document.querySelector(".pagination");
-
-  if(total<=pageSize){
-    pagination.style.display="none";
-    return;
-  }
-
-  pagination.style.display="flex";
-
-  const totalPages=Math.ceil(total/pageSize);
-  pageInfo.innerText=`Trang ${currentPage}/${totalPages}`;
-
-  prevBtn.disabled=currentPage===1;
-  nextBtn.disabled=currentPage===totalPages;
-}
 
 // SEARCH
 function doSearch(keyword){
@@ -412,10 +277,37 @@ function doSearch(keyword){
   },300);
 }
 
-// 👉 CHỈ GỌI GỢI Ý
+// render
+function render(arr){
+  const list=document.getElementById("list");
+  list.innerHTML="";
+
+  if(!arr.length){
+    list.innerHTML=`<div class="empty">Không có dữ liệu</div>`;
+    return;
+  }
+
+  arr.slice(0,10).forEach(item=>{
+    list.innerHTML+=`
+      <div class="card">
+        <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
+        <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
+        <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
+      </div>
+    `;
+  });
+}
+
+// EVENTS
 searchInput.addEventListener("input", e=>{
-  const keyword=normalize(e.target.value);
-  showSuggestions(keyword);
+  showSuggestions(normalize(e.target.value));
+});
+
+/* ENTER = SEARCH */
+searchInput.addEventListener("keypress", e=>{
+  if(e.key === "Enter"){
+    handleSearch();
+  }
 });
 
 function handleSearch(){
@@ -428,18 +320,7 @@ function clearSearch(){
   list.innerHTML="";
   document.getElementById("stats").innerHTML="";
   document.getElementById("suggestions").style.display="none";
-  document.querySelector(".pagination").style.display="none";
 }
-
-prevBtn.onclick=()=>{
-  currentPage--;
-  render(filtered);
-};
-
-nextBtn.onclick=()=>{
-  currentPage++;
-  render(filtered);
-};
 </script>
 
 </body>
