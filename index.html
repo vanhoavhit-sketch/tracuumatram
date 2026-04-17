@@ -70,6 +70,7 @@ button {
   display: none;
 }
 
+/* CARD */
 .card {
   background: white;
   margin: 10px;
@@ -79,11 +80,16 @@ button {
   position: relative;
 }
 
-/* ⭐ FIX CANH LỀ */
+/* highlight */
+.card.active {
+  background: #e6f0ff;
+  border: 1px solid #007bff;
+}
+
+/* CANH LỀ */
 .row {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  align-items: start;
+  grid-template-columns: 140px 1fr;
   margin-bottom: 6px;
   font-size: 13px;
 }
@@ -104,17 +110,16 @@ button {
 
 .coord {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .map-btn {
-  padding: 4px 6px;
-  font-size: 12px;
-  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 11px;
+  border-radius: 8px;
   border: none;
-  background: #007bff;
+  background: linear-gradient(135deg, #005bac, #007bff);
   color: white;
 }
 
@@ -131,6 +136,14 @@ button {
   color: gold;
 }
 
+.stats-box {
+  background: white;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
 .empty {
   text-align: center;
   color: #999;
@@ -145,6 +158,7 @@ button {
 <div class="search-box">
   <div class="search-inner">
     <input id="searchInput" placeholder="Nhập sitename...">
+
     <div class="btn-group">
       <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
       <button class="btn-clear" onclick="clearSearch()">Xóa</button>
@@ -154,6 +168,7 @@ button {
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
 
+<div id="stats"></div>
 <div id="list"></div>
 
 <script>
@@ -163,10 +178,6 @@ let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
-  searchInput.addEventListener("input", function(e) {
-  const keyword = normalize(e.target.value);
-  doSearch(keyword);
-});
 
 function normalize(str) {
   return (str || "")
@@ -176,13 +187,13 @@ function normalize(str) {
 }
 
 function handleSearch() {
-  const keyword = normalize(searchInput.value);
-  doSearch(keyword);
+  doSearch(normalize(searchInput.value));
 }
 
 function clearSearch() {
   searchInput.value = "";
   list.innerHTML = "";
+  stats.innerHTML = "";
 }
 
 function doSearch(keyword) {
@@ -190,6 +201,7 @@ function doSearch(keyword) {
 
   if (!keyword) {
     list.innerHTML = "";
+    stats.innerHTML = "";
     return;
   }
 
@@ -213,6 +225,7 @@ function render(arr) {
 
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
+    renderStats([]);
     return;
   }
 
@@ -223,52 +236,68 @@ function render(arr) {
     const card = document.createElement("div");
     card.className = "card";
 
+    card.onclick = () => {
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+    };
+
     card.innerHTML = `
       <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
 
-      <div class="row">
-        <span class="label">Mã trạm mới:</span>
-        <span class="value text-red">${item.sitenamemoi}</span>
-      </div>
-
-      <div class="row">
-        <span class="label">Mã trạm cũ:</span>
-        <span class="value text-red">${item.sitenamecu}</span>
-      </div>
-
-      <div class="row">
-        <span class="label">Địa chỉ:</span>
-        <span class="value">${item.diachi}</span>
-      </div>
-
-      <div class="row">
-        <span class="label">Loại trạm:</span>
-        <span class="value">${item.loaitram}</span>
-      </div>
-
-      <div class="row">
-        <span class="label">Nhà trạm:</span>
-        <span class="value">${item.nhatram}</span>
-      </div>
+      <div class="row"><span class="label">Mã trạm mới:</span><span class="value text-red">${item.sitenamemoi}</span></div>
+      <div class="row"><span class="label">Mã trạm cũ:</span><span class="value text-red">${item.sitenamecu}</span></div>
+      <div class="row"><span class="label">Địa chỉ:</span><span class="value">${item.diachi}</span></div>
+      <div class="row"><span class="label">Loại trạm:</span><span class="value">${item.loaitram}</span></div>
+      <div class="row"><span class="label">Nhà trạm:</span><span class="value">${item.nhatram}</span></div>
 
       <div class="row">
         <span class="label">Tọa độ:</span>
         <span class="value coord">
           ${item.Lat}, ${item.Long}
-          <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">
-            Đi đến
-          </button>
+          <button class="map-btn" onclick="event.stopPropagation(); goMap('${item.Lat}','${item.Long}')">📍</button>
         </span>
       </div>
 
-      <div class="row">
-        <span class="label">NVQL:</span>
-        <span class="value">${item.NVQL}</span>
-      </div>
+      <div class="row"><span class="label">NVQL:</span><span class="value">${item.NVQL}</span></div>
     `;
 
     list.appendChild(card);
   });
+
+  renderStats(arr);
+}
+
+function renderStats(arr) {
+  const statsDiv = document.getElementById("stats");
+
+  if (!arr.length) {
+    statsDiv.innerHTML = "";
+    return;
+  }
+
+  const total = arr.length;
+  const byXa = {};
+
+  arr.forEach(item => {
+    const xa = item.diachi || "Không rõ";
+    if (!byXa[xa]) byXa[xa] = 0;
+    byXa[xa]++;
+  });
+
+  let html = `<div class="stats-box">
+    <b>Tổng số trạm:</b> ${total}<br><br>
+    <b>Thống kê theo địa chỉ:</b><br>`;
+
+  Object.entries(byXa)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,5)
+    .forEach(([xa,count]) => {
+      html += `- ${xa}: ${count} trạm<br>`;
+    });
+
+  html += `</div>`;
+
+  statsDiv.innerHTML = html;
 }
 
 function toggleFav(id) {
