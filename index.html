@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -108,9 +107,9 @@ button {
   color: #003366;
 }
 
-/* HIGHLIGHT */
-.highlight {
-  background: yellow;
+/* 🔴 TEXT RED */
+.text-red {
+  color: #d60000;
   font-weight: bold;
 }
 
@@ -180,9 +179,7 @@ button {
 
 <div class="loading" id="loading">🔄 Đang tìm...</div>
 
-<!-- BOX THỐNG KÊ -->
 <div id="stats"></div>
-
 <div id="list"></div>
 
 <div class="pagination">
@@ -209,13 +206,6 @@ function normalize(str) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
-}
-
-// highlight
-function highlight(text, keyword) {
-  if (!keyword) return text;
-  const regex = new RegExp(`(${keyword})`, "gi");
-  return text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
 // favorite
@@ -282,7 +272,6 @@ function render(arr) {
 
   const start = (currentPage - 1) * pageSize;
   const pageData = arr.slice(start, start + pageSize);
-  const keyword = normalize(searchInput.value);
 
   pageData.forEach((item, index) => {
     const id = item.sitenamecu + index;
@@ -300,9 +289,9 @@ function render(arr) {
     card.innerHTML = `
       <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
 
-      <div class="row"><span class="label">Site cũ:</span> ${highlight(item.sitenamecu, keyword)}</div>
-      <div class="row"><span class="label">Site mới:</span> ${highlight(item.sitenamemoi, keyword)}</div>
-      <div class="row"><span class="label">Địa chỉ:</span> ${highlight(item.diachi, keyword)}</div>
+      <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
+      <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
+      <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
       <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row">
         <span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}
@@ -362,7 +351,6 @@ function doSearch(keyword) {
   }, 300);
 }
 
-// events
 searchInput.addEventListener("input", e => {
   doSearch(normalize(e.target.value));
 });
