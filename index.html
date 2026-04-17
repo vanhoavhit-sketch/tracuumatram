@@ -291,8 +291,8 @@ function render(arr) {
     card.innerHTML = `
       <div class="star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFav('${id}')">★</div>
 
-      <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
-      <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
+      <div class="row"><span class="label">Mã trạm mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
+      <div class="row"><span class="label">Mã trạm cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
       <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
       <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
       <div class="row"><span class="label">Nhà Trạm:</span> ${item.nhatram}</div>
