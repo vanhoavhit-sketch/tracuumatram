@@ -12,7 +12,6 @@ body {
   background: #f2f4f8;
 }
 
-/* HEADER */
 .header {
   background: linear-gradient(90deg, #003366, #005bac);
   color: white;
@@ -21,7 +20,6 @@ body {
   font-weight: bold;
 }
 
-/* SEARCH */
 .search-box {
   padding: 15px;
   background: white;
@@ -34,6 +32,7 @@ body {
 .search-inner {
   width: 90%;
   max-width: 400px;
+  position: relative;
 }
 
 input {
@@ -41,10 +40,32 @@ input {
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-/* BUTTON */
+/* GỢI Ý */
+.suggest-box {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  display: none;
+  z-index: 10;
+}
+
+.suggest-item {
+  padding: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.suggest-item:hover {
+  background: #f0f0f0;
+}
+
 .btn-group {
   display: flex;
   gap: 8px;
@@ -67,14 +88,12 @@ button {
   background: #f1f3f6;
 }
 
-/* LOADING */
 .loading {
   text-align: center;
   padding: 10px;
   display: none;
 }
 
-/* STATS */
 .stats-box {
   background: white;
   margin: 10px;
@@ -84,7 +103,6 @@ button {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* CARD */
 .card {
   background: white;
   margin: 10px;
@@ -105,7 +123,6 @@ button {
   font-weight: bold;
 }
 
-/* PAGINATION */
 .pagination {
   display: none;
   justify-content: center;
@@ -139,6 +156,7 @@ button {
 <div class="search-box">
   <div class="search-inner">
     <input id="searchInput" placeholder="Nhập sitename / địa chỉ...">
+    <div class="suggest-box" id="suggestBox"></div>
 
     <div class="btn-group">
       <button class="btn-search" onclick="handleSearch()">Tìm kiếm</button>
@@ -164,7 +182,6 @@ let filtered = [];
 let currentPage = 1;
 const pageSize = 10;
 
-// load data
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
@@ -177,7 +194,39 @@ function normalize(str) {
     .toLowerCase();
 }
 
-// search
+// HIỆN GỢI Ý CHỈ KHI CLICK
+searchInput.addEventListener("focus", () => {
+  showSuggest();
+});
+
+function showSuggest() {
+  const keyword = normalize(searchInput.value);
+  const box = document.getElementById("suggestBox");
+
+  const suggest = data.filter(item =>
+    normalize(item.sitenamecu).includes(keyword)
+  ).slice(0,5);
+
+  if (!suggest.length) {
+    box.style.display = "none";
+    return;
+  }
+
+  box.innerHTML = suggest.map(s =>
+    `<div class="suggest-item">${s.sitenamecu}</div>`
+  ).join("");
+
+  box.style.display = "block";
+}
+
+// CLICK NGOÀI → ẨN
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".search-inner")) {
+    document.getElementById("suggestBox").style.display = "none";
+  }
+});
+
+// SEARCH
 function doSearch(keyword) {
   const loading = document.getElementById("loading");
 
@@ -203,7 +252,7 @@ function doSearch(keyword) {
   }, 300);
 }
 
-// render
+// RENDER
 function render(arr) {
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -211,7 +260,6 @@ function render(arr) {
   if (!arr.length) {
     list.innerHTML = `<div class="empty">Không có dữ liệu</div>`;
     renderStats([]);
-    document.querySelector(".pagination").style.display = "none";
     return;
   }
 
@@ -238,7 +286,7 @@ function render(arr) {
   renderStats(arr);
 }
 
-// stats
+// STATS (GIỮ NGUYÊN)
 function renderStats(arr) {
   const statsDiv = document.getElementById("stats");
 
@@ -248,15 +296,31 @@ function renderStats(arr) {
   }
 
   const total = arr.length;
+  const byXa = {};
 
-  statsDiv.innerHTML = `
-    <div class="stats-box">
-      <b>Tổng số trạm:</b> ${total}
-    </div>
-  `;
+  arr.forEach(item => {
+    const xa = item.diachi || "Không rõ";
+    if (!byXa[xa]) byXa[xa] = 0;
+    byXa[xa]++;
+  });
+
+  let html = `<div class="stats-box">
+    <b>Tổng số trạm:</b> ${total}<br><br>
+    <b>Thống kê theo địa chỉ:</b><br>`;
+
+  Object.entries(byXa)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,5)
+    .forEach(([xa,count]) => {
+      html += `- ${xa}: ${count} trạm<br>`;
+    });
+
+  html += `</div>`;
+
+  statsDiv.innerHTML = html;
 }
 
-// pagination
+// PAGINATION
 function updatePagination(total) {
   const pagination = document.querySelector(".pagination");
 
@@ -274,8 +338,9 @@ function updatePagination(total) {
   nextBtn.disabled = currentPage === totalPages;
 }
 
-// button
+// BUTTON
 function handleSearch() {
+  document.getElementById("suggestBox").style.display = "none";
   doSearch(normalize(searchInput.value));
 }
 
@@ -283,10 +348,10 @@ function clearSearch() {
   searchInput.value = "";
   list.innerHTML = "";
   stats.innerHTML = "";
-  document.querySelector(".pagination").style.display = "none";
+  document.getElementById("suggestBox").style.display = "none";
 }
 
-// pagination click
+// PAGINATION CLICK
 prevBtn.onclick = () => {
   currentPage--;
   render(filtered);
