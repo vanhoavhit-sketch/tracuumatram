@@ -163,6 +163,10 @@ let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
 fetch('dulieutram.json')
 .then(res => res.json())
 .then(json => data = json);
+  searchInput.addEventListener("input", function(e) {
+  const keyword = normalize(e.target.value);
+  doSearch(keyword);
+});
 
 function normalize(str) {
   return (str || "")
