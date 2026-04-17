@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi tiết trạm</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f2f4f8;
+  margin: 0;
+}
+
+.container {
+  padding: 15px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.row {
+  margin-bottom: 10px;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.text-red {
+  color: red;
+  font-weight: bold;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #005bac;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <a href="index.html" class="back-btn">← Quay lại</a>
+
+  <div class="card" id="detail"></div>
+</div>
+
+<script>
+let data = [];
+
+fetch('dulieutram.json')
+.then(res => res.json())
+.then(json => {
+  data = json;
+  loadDetail();
+});
+
+function getParam(name) {
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
+function loadDetail() {
+  const id = getParam("id");
+
+  const item = data.find(i => i.sitenamecu === id);
+
+  if (!item) {
+    document.getElementById("detail").innerHTML = "Không tìm thấy";
+    return;
+  }
+
+  document.getElementById("detail").innerHTML = `
+    <div class="row"><span class="label">Site cũ:</span> <span class="text-red">${item.sitenamecu}</span></div>
+    <div class="row"><span class="label">Site mới:</span> <span class="text-red">${item.sitenamemoi}</span></div>
+    <div class="row"><span class="label">Địa chỉ:</span> ${item.diachi}</div>
+    <div class="row"><span class="label">Loại trạm:</span> ${item.loaitram}</div>
+    <div class="row"><span class="label">Tọa độ:</span> ${item.Lat}, ${item.Long}</div>
+    <div class="row"><span class="label">NVQL:</span> ${item.NVQL}</div>
+  `;
+}
+</script>
+
+</body>
+</html>
